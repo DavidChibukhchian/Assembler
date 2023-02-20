@@ -56,7 +56,7 @@ PrintString	proc
 
 ;----------------------------------------------------------
 ; Converts a number to system with base BX and puts
-; result in any string of length 16
+; result in any string of length 17
 ;----------------------------------------------------------
 ; Entry:	AX = number
 ;		BX = base
