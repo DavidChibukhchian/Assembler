@@ -32,6 +32,7 @@ Start:		mov ax, 127d		; number
 ; Expects:	None	
 ; Destroys:	CL
 ;		DX
+;		SI
 ; Exit:		None
 ;----------------------------------------------------------
 Converter	proc
