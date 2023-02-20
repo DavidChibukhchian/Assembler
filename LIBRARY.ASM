@@ -8,6 +8,7 @@
 ; Expects:	None	
 ; Destroys:	CL
 ;		DX
+;		SI
 ; Exit:		None
 ;----------------------------------------------------------
 Converter	proc
