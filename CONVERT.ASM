@@ -22,17 +22,18 @@ Start:		mov ax, 127d		; number
 		mov ax, 4C00h
 		int 21h
 
-;-------------------------------------------------
-; Converts a number to system with base N
-;-------------------------------------------------
+;----------------------------------------------------------
+; Converts a number to system with base BX and puts
+; result in any string of length 16
+;----------------------------------------------------------
 ; Entry:	AX = number
 ;		BX = base
-;		SI = string address
+;		SI = address of string
 ; Expects:	None	
 ; Destroys:	CL
 ;		DX
-; Exit:		res = ready string
-;-------------------------------------------------
+; Exit:		None
+;----------------------------------------------------------
 Converter	proc
 		
 		mov dx, 00h 		; (DX,AX) - dword
@@ -41,7 +42,7 @@ Converter	proc
 		mov cl, 16d		; counter = 16
 
 @@Next_Digit:	dec cl
-		div bx 			; => mod is in DL
+		div bx
 
 		cmp dl, 10d
 		jb Small_Base  
@@ -69,7 +70,7 @@ Small_Base:	add dl, '0'
 
 @@Exit:		ret
 		endp
-;-------------------------------------------------
+;----------------------------------------------------------
 
 res db 17 DUP('$')
 
