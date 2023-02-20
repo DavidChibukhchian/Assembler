@@ -1,20 +1,20 @@
 ;----------------------------------------------------------
-; Calculates video segment coordinates
+; Calculats video segments coordinates
 ;----------------------------------------------------------
-; Entry:	BH = number of column
-;		BL = number of row
+; Entry:	BH = number of row
+;		BL = number of column
 ; Expects:	None
 ; Destroys:	AX
 ; Exit:		DX
 ;----------------------------------------------------------
 GetVideoAddress	proc
-		mov al, bl
+		mov al, bh
 		mov dh, 160d
 		mul dh
 		
 		mov dx, ax
-		mov al, bh
-		add al, bh
+		mov al, bl
+		add al, bl
 		cbw
 		
 		add dx, ax
@@ -32,20 +32,22 @@ GetVideoAddress	proc
 ;		SI = address of string
 ; Expects:	ES -> Video Segment
 ; Destroys:	AX
-;		DH
+;		DI
 ;		SI
 ; Exit:		None
 ;----------------------------------------------------------
 PrintString	proc
 
-@@Next:		mov dh, [si]
-		cmp dh, 0
+		mov di, bx
+
+@@Next:		mov cl, [si]
+		cmp cl, 0
 		je @@Exit
 
-		mov byte ptr es:[bx],   dh 	; symbol
-		mov byte ptr es:[bx+1], ch	; color
+		mov byte ptr es:[di],   cl 	; symbol
+		mov byte ptr es:[di+1], ch	; color
 
-		add bx, 2
+		add di, 2
 		inc si
 		jmp @@Next
 
@@ -60,9 +62,10 @@ PrintString	proc
 ;----------------------------------------------------------
 ; Entry:	AX = number
 ;		BX = base
-;		SI = address of string
+;		SI = string address
 ; Expects:	None	
-; Destroys:	CL
+; Destroys:	AX
+;		CL
 ;		DX
 ;		SI
 ; Exit:		None
@@ -103,4 +106,82 @@ Small_Base:	add dl, '0'
 
 @@Exit:		ret
 		endp
+;----------------------------------------------------------
+
+
+;----------------------------------------------------------
+; Scans a 16 bit number from keyboard to AX
+;----------------------------------------------------------
+; Entry:	None
+; Destroys:	BX
+;		CX
+;		DX
+;		DI
+;		SI
+; Exit:		AX
+;----------------------------------------------------------
+MAX  EQU 5
+BASE EQU 10
+
+scanf		proc
+
+		mov ax, 0C0Ah	
+		mov dx, offset buffer
+		int 21h
+
+		mov si, offset buffer + 1
+		mov cl, [si]		; cx == number of digits
+		mov ch, 0
+
+		mov ax, 1
+		mov bx, BASE
+
+		mov di, 0
+
+@@GetPow10:	mul bx
+		loop @@GetPow10
+		div bx			; 
+		mov bx, ax		; bx = 10^(cx-1)
+
+		mov cl, [si]		; cx == number of digits
+		mov ch, 0
+		inc si			; [si] = first digit
+		mov dx, 0
+
+@@Next:		mov al, [si]
+		sub al, '0'
+		mov ah, 0
+		mul bx
+
+		cmp dx, 0
+		jne @@Error	
+
+		add di, ax
+		jb @@Error
+		
+		mov dx, 0
+		mov ax, bx
+		mov bx, BASE
+		div bx
+		mov bx, ax
+		inc si
+		loop @@Next
+		
+		mov ah, 02h
+		mov dl, 0Ah 	; '\n'
+		int 21h
+
+		mov ax, di
+		jmp @@Exit
+
+@@Error:	mov ah, 09h
+		mov dx, offset ErrMessage
+		int 21h
+
+@@Exit:		ret
+		endp	
+;----------------------------------------------------------
+buffer db MAX+1, MAX+2 DUP (0Dh)
+
+ErrMessage db "You've entered too big value$"
 ;----------------------------------------------------------
