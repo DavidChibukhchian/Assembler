@@ -76,7 +76,7 @@ DrawFrame		proc
 
 
 ;---------------------------------------------------
-; Useful function to draw a frame
+; Draws a line on the screen
 ;---------------------------------------------------
 ; Entry:		AH = space symbol
 ;			AL = color attributes
