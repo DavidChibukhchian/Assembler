@@ -8,12 +8,12 @@ Start:			mov ax, 0B800h
 
 			mov bx, 2*3d + 160*(5d - 1d)		; x = 3, y = 5
 
-			mov ah, ' '							; space symbol
-			mov al, 4Ch 						; color
-			mov ch, 03h							; frame symbol
-			mov cl, 5Ch							; color
-			mov dh, 5d							; height of frame
-			mov dl, 7d							; width  of frame
+			mov ah, ' '				; space symbol
+			mov al, 4Ch 				; color
+			mov ch, 03h				; frame symbol
+			mov cl, 5Ch				; color
+			mov dh, 5d				; height of frame
+			mov dl, 7d				; width  of frame
 			call DrawFrame
 
 			mov ax, 4C00h
