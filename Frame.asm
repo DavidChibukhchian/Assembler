@@ -45,13 +45,13 @@ DrawFrame			proc
 				pop cx
 				dec dh 		
 		
-@@NextLine:			cmp dh, 1
+@@Next_Line:			cmp dh, 1
 				je @@Exit
 
 				call DrawLine
 				add bx, new_line
 				dec dh
-				jmp @@NextLine
+				jmp @@Next_Line
 
 @@Exit:				push cx
 				mov cx, ax
