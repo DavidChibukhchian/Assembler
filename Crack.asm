@@ -168,7 +168,7 @@ Enter_The_Password  db ' ENTER THE PASSWORD ', 0
 Password_Field      db max_len_of_password DUP(' '), 0
 field_coordinates   dw 0
 
-Right_Password      db 'hola', 8 DUP(0)
+Right_Password      db 'password', 4 DUP(0)
 Entered_Password    db max_len_of_password DUP(0)
 flag                db 0
 
