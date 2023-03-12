@@ -119,7 +119,7 @@ Enter_Password      proc
                     mov es:[bx], cx
 
 @@Label:            dec si
-                    mov byte ptr [si], 0                        ; deletes entered symbol from the password buffer
+                    mov word ptr [si], 0                        ; deletes entered symbol from the password buffer
 
                     jmp @@Next_Symbol
 
@@ -128,11 +128,11 @@ Enter_Password      proc
                     int 21h
                     mov [si], al
 
-                    cmp al, 0Dh                                 ; exit only by enter
-                    je @@Exit
-
-                    cmp al, 08h
+                    cmp byte ptr [si], 08h
                     je @@Delete_Symbol
+
+                    cmp byte ptr [si], 0Dh                      ; exit only by enter
+                    je @@Exit
 
                     jmp @@Max_Len_Exit
 
@@ -173,7 +173,7 @@ Verify_Password     proc
                     
                     jmp @@Result
 
-@@Change_Flag:      add flag, 1
+@@Change_Flag:      xor flag, 1
                     
 @@Result:           mov al, 0B1h                                ; a symbol for the result picture
                     mov ah, 93h                                 ; color
