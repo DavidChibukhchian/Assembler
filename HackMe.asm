@@ -28,8 +28,8 @@ Display_Menu        proc
                     mov bx, 160d + 2d
                     mov ch, 5Ch                                 ; color of a frame symbol
                     mov cl, 5Ch                                 ; color of a space symbol
-                    mov dh, 13d								    ; height of the frame
-					mov dl, 38d								    ; width  of the frame
+                    mov dh, 13d					; height of the frame
+		    mov dl, 38d					; width  of the frame
                     call DrawFrame
 
                     mov ah, 3Ch                                 ; color of symbol for the picture
