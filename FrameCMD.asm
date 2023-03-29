@@ -10,10 +10,6 @@ Start:              call GetArguments
                     mov bp, 0B800h
                     mov es, bp
 
-                    pop bp                                      ; color of text
-                    pop ax                                      ; colors of frame and space symbols
-                    pop dx                                      ; height and width
-                    pop bx                                      ; video segment coordinates
                     call DrawFrame
                     
                     call WriteText
@@ -24,23 +20,24 @@ Start:              call GetArguments
 
 
 ;-----------------------------------------------------------
-; Puts command line arguments in stack
+; Gets command line arguments
 ;-----------------------------------------------------------
 ; Entry:            None
 ; Expects:          ES -> PSP
-; Destroys:         AX, BX, CX, DX, BP, DI
-; Exit:             color of text               <- stack top
-;                   colors of frame and space symbols
-;                   height and width
-;                   video segments coordinates
-;
-;                   CX =  frame type
+; Destroys:         None
+; Exit:             AH = color of frame symbol
+;                   AL = color of space symbol
+;                   BX = video segment coordinates
+;                   CX = color of text
+;                   DH = height of frame
+;                   DL = width  of frame
+;                   BP = frame type
+;                   DI = address of array of custom symbols
 ;-----------------------------------------------------------
 number_of_arguments EQU 80h
 offset_of_arguments EQU 82h
 
 GetArguments        proc
-                    pop si                                      ; saves a return address in BP
 
                     xor ax, ax
                     mov di, number_of_arguments
@@ -49,8 +46,8 @@ GetArguments        proc
                     inc di
                     mov byte ptr es:[di], ' '
 
-                    mov di, offset_of_arguments
-                    mov bx, 10d                                 ; coordinates, height and width are in decimal format
+                    mov di, offset_of_arguments                 ; sets the beginning of cmd arguments
+                    mov bp, 10d                                 ; coordinates, height and width are in decimal format
 
                     call ReadNumber                             ; gets X coordinate
                     mov ch, dl
@@ -59,30 +56,30 @@ GetArguments        proc
                     mov cl, dl
 
                     call GetCoordinates                         ; gets video segment coordinates
-                    push cx
+                    mov bx, cx                                  ; saves in BX
 
                     call ReadNumber                             ; gets height
                     mov ch, dl
 
                     call ReadNumber                             ; gets width
-                    mov cl, dl
-                    push cx
+                    mov cl, dl                                  ; saves height and width in CX
 
-                    mov bx, 16d                                 ; because colors are in hexadecimal format
+                    mov bp, 16d                                 ; colors are in hexadecimal format
                     call ReadNumber                             ; gets color of a frame symbol
-                    mov ch, dl
+                    mov ah, dl
 
                     call ReadNumber                             ; gets color of a space symbol
-                    mov cl, dl
-                    push cx
+                    mov al, dl                                  ; saves colors in AX
 
                     call ReadNumber                             ; gets frame type
-                    mov cx, dx                                  ; frame type is in CX
+                    push dx                                     ; and pushes it in stack
 
                     call ReadNumber                             ; gets color of text
-                    push dx
+                    mov si, dx                                  
 
-                    push si                                     ; pushes a return address
+                    mov dx, cx
+                    mov cx, si
+                    pop bp
 
                     ret
                     endp
@@ -94,16 +91,19 @@ GetArguments        proc
 ; Sets a frame type and sets custom symbols in case of
 ; custom type
 ;-----------------------------------------------------------
-; Entry:            CX = frame type
-;                   DI = address of symbol of type
+; Entry:            BP = frame type
+;                   DI = address of array of custom symbols
 ; Expects:          ES -> PSP
-; Destroys:         AH, CX, BP, DI, SI
+; Destroys:         BP
 ; Exit:             SI = offset of array of drawing symbols
+;                   DI = address of text
 ;-----------------------------------------------------------
 number_of_frame_symbols EQU 9d
 
 SetFrameType        proc
+                    push ax cx
 
+                    mov cx, bp
                     cmp cx, 5d                                  ; number of custom type
                     je @@Custom_Type
 
@@ -128,7 +128,8 @@ SetFrameType        proc
 
                     mov si, offset CustomType
 
-@@Exit:             ret
+@@Exit:             pop cx ax
+                    ret
                     endp
 ;-----------------------------------------------------------
 
@@ -137,16 +138,16 @@ SetFrameType        proc
 ;-----------------------------------------------------------
 ; Writes text in the frame or skips it
 ;-----------------------------------------------------------
-; Entry:
+; Entry:            CX = color of text
+;                   DI = address of text
 ; Expects:          ES -> PSP
-; Destroys:
+; Destroys:         AX, BX, CX, DX, DI, SI
 ; Exit:             None
 ;-----------------------------------------------------------
 side_offset         EQU 4
 
 length_of_text      dw 0
 color_of_text       db 0
-
 
 WriteText           proc
 
@@ -161,8 +162,7 @@ WriteText           proc
                     jmp @@Exit
 
 
-@@Write_Text:       mov cx, bp
-                    mov color_of_text, cl
+@@Write_Text:       mov color_of_text, cl
 
                     sub ax, di
                     dec ax                                      ; length of text is in AL, AH = 0
@@ -194,12 +194,12 @@ WriteText           proc
                     dec al                                      ; Y offset is in AL
 
 @@Correct_Y:        cmp al, 0
-                    je @@Correct_BX                 
+                    je @@StartWriting                
                     add bx, new_line                            ; corrects video segment coordinates
                     dec al
                     jmp @@Correct_Y
 
-@@Correct_BX:       pop ax
+@@StartWriting:     pop ax
                     mov cx, ax
 
 @@Next_Symbol:      mov dh, [di]
@@ -218,34 +218,31 @@ WriteText           proc
 
                     div dl
                     cmp ah, 0                                   ; checks remainder
-                    je @@Skip                                   ;
+                    je @@NoRemainder
                     inc al
 
-@@Skip:             xor ah, ah                                  ; in AL number of lines, AH = 0
-
+@@NoRemainder:      xor ah, ah                                  ; in AL number of lines, AH = 0
                     sub dh, al
                     mov al, dh
                     mov ch, 2
                     div ch
 
-@@Adde:             cmp al, 0
-                    je @@Exitrr                
+@@Correct_BX:       cmp al, 0
+                    je @@StartWriting_                
                     add bx, new_line                            ; corrects video segment coordinates
                     dec al
-                    jmp @@Adde         
+                    jmp @@Correct_BX  
 
                           
-@@Exitrr:           xor ax, ax
+@@StartWriting_:    xor ax, ax
                     mov dh, 0
                     mov si, length_of_text
 
-@@Next_Symbolr:     cmp si, 0
+@@Next_Symbol_:     cmp si, 0
                     je @@Exit
-                    push cx
-                    mov cx, bp
 
                     cmp al, dl
-                    jne @@Skippp
+                    jne @@NoCarriageReturn
                     add bx, new_line
                     mov dh, 0
                     sub bx, dx
@@ -253,16 +250,16 @@ WriteText           proc
                     xor al, al
 
 
-@@Skippp:           mov dh, [di]
+@@NoCarriageReturn: mov dh, [di]
                     mov byte ptr es:[bx],   dh
-                    mov byte ptr es:[bx+1], cl
-                    inc al
+                    mov dh, color_of_text
+                    mov byte ptr es:[bx+1], dh
 
+                    inc al
                     add bx, size_of_pixel
                     inc di
-                    pop cx
                     dec si
-                    jmp @@Next_Symbolr
+                    jmp @@Next_Symbol_
 
 
 @@Exit:             ret
@@ -275,10 +272,10 @@ WriteText           proc
 ; Draws a frame on the screen
 ;-----------------------------------------------------------
 ; Entry:            AH = color of frame symbol
-;                   AL = color of space
+;                   AL = color of space symbol
 ;                   BX = video segment coordinates
-;                   DH = height
-;                   DL = width
+;                   DH = height of frame
+;                   DL = width  of frame
 ;                   SI = offset of array of drawing symbols
 ; Expects:          ES -> video segment
 ; Destroys:         SI
@@ -352,13 +349,13 @@ Small_Width         db "ERROR:  width is too small$"
 ;                   DL = width
 ;                   SI = offset of array of three symbols
 ; Expects:          ES -> video segment
-; Destroys:         CH
+; Destroys:         None
 ; Exit:             None
 ;-----------------------------------------------------------
 size_of_pixel       EQU 2
 
 DrawLine            proc
-                    push bx dx
+                    push bx cx dx
 
                     sub dl, 2
 
@@ -384,7 +381,7 @@ DrawLine            proc
                     mov byte ptr es:[bx],   ch
                     mov byte ptr es:[bx+1], ah
 
-                    pop dx bx
+                    pop dx cx bx
                     ret
                     endp
 ;-----------------------------------------------------------
@@ -406,10 +403,10 @@ CustomType          db 9 DUP(0)
 ;-----------------------------------------------------------
 ; Reads a number from an array
 ;-----------------------------------------------------------
-; Entry:            BX = base
+; Entry:            BP = base
 ;                   DI = offset of array
 ; Expects:          None
-; Destroys:         DI
+; Destroys:         DI++
 ; Exit:             DX
 ;-----------------------------------------------------------
 base                dw 0
@@ -421,7 +418,7 @@ ReadNumber          proc
 
                     mov result, 0
                     
-                    mov base, bx
+                    mov base, bp
 
                     xor bx, bx
                     xor bp, bp
@@ -429,7 +426,7 @@ ReadNumber          proc
 
 @@Next_Digit:       cmp bl, ' '
                     je @@Start
-                    inc bp
+                    inc bp                                      ; counts number of digits
                     inc di
                     mov bl, [di]
                     jmp @@Next_Digit
@@ -459,7 +456,7 @@ ReadNumber          proc
                     loop @@Next
 
                     add di, bp
-                    add di, 2
+                    add di, size_of_pixel
                     mov dx, result
 
                     pop bp cx bx ax
