@@ -7,8 +7,9 @@ Start:              call GetArguments
 
                     call SetFrameType
 
-                    mov ax, 0B800h
-                    mov es, ax
+                    mov bp, 0B800h
+                    mov es, bp
+
                     pop bp                                      ; color of text
                     pop ax                                      ; colors of frame and space symbols
                     pop dx                                      ; height and width
@@ -31,26 +32,33 @@ Start:              call GetArguments
 ; Exit:             color of text               <- stack top
 ;                   colors of frame and space symbols
 ;                   height and width
-;                   video segments coordinates  
+;                   video segments coordinates
+;
+;                   CX =  frame type
 ;-----------------------------------------------------------
+number_of_arguments EQU 80h
+offset_of_arguments EQU 82h
+
 GetArguments        proc
-                    pop bp                                      ; saves a return address in BP
+                    pop si                                      ; saves a return address in BP
 
                     xor ax, ax
-                    mov di, 80h
-                    mov al, [di]
+                    mov di, number_of_arguments
+                    mov al, [di]                                ; puts ' ' to the end of cmd arguments
                     add di, ax
                     inc di
                     mov byte ptr es:[di], ' '
 
-                    mov di, 82h
-                    mov bx, 10d
+                    mov di, offset_of_arguments
+                    mov bx, 10d                                 ; coordinates, height and width are in decimal format
+
                     call ReadNumber                             ; gets X coordinate
                     mov ch, dl
 
-                    call ReadNumber
+                    call ReadNumber                             ; gets Y coordinate
                     mov cl, dl
-                    call GetCoordinates                         ; gets Y coordinate
+
+                    call GetCoordinates                         ; gets video segment coordinates
                     push cx
 
                     call ReadNumber                             ; gets height
@@ -60,7 +68,7 @@ GetArguments        proc
                     mov cl, dl
                     push cx
 
-                    mov bx, 16d
+                    mov bx, 16d                                 ; because colors are in hexadecimal format
                     call ReadNumber                             ; gets color of a frame symbol
                     mov ch, dl
 
@@ -69,13 +77,12 @@ GetArguments        proc
                     push cx
 
                     call ReadNumber                             ; gets frame type
-                    mov cl, dl
+                    mov cx, dx                                  ; frame type is in CX
 
                     call ReadNumber                             ; gets color of text
                     push dx
-                    mov dl, cl
 
-                    push bp                                     ; pushes a return address
+                    push si                                     ; pushes a return address
 
                     ret
                     endp
@@ -87,28 +94,30 @@ GetArguments        proc
 ; Sets a frame type and sets custom symbols in case of
 ; custom type
 ;-----------------------------------------------------------
-; Entry:            DX = frame type
+; Entry:            CX = frame type
 ;                   DI = address of symbol of type
 ; Expects:          ES -> PSP
-; Destroys:         AH, CX, DX, BP, DI, SI
-; Exit:             None
+; Destroys:         AH, CX, BP, DI, SI
+; Exit:             SI = offset of array of drawing symbols
 ;-----------------------------------------------------------
+number_of_frame_symbols EQU 9d
+
 SetFrameType        proc
 
-                    cmp dx, 5d                                  ; number of custom type
+                    cmp cx, 5d                                  ; number of custom type
                     je @@Custom_Type
 
-                    dec dl
+                    dec cx
                     mov si, offset Type1
 
-@@Next_Type:        cmp dl, 0                                   ; sets offset of array of symbols
+@@Next_Type:        cmp cx, 0                                   ; sets offset of array of symbols
                     je @@Exit                                   ; in order to not use comparings
-                    add si, 9d
-                    dec dl
+                    add si, number_of_frame_symbols
+                    dec cx
                     jmp @@Next_Type
 
 @@Custom_Type:      mov bp, offset CustomType
-                    mov cx, 9d
+                    mov cx, number_of_frame_symbols
 
 @@Next:             mov ah, [di]                                ; puts custom symbols into array          
                     mov [bp], ah
@@ -133,31 +142,39 @@ SetFrameType        proc
 ; Destroys:
 ; Exit:             None
 ;-----------------------------------------------------------
+side_offset         EQU 4
+
+length_of_text      dw 0
+color_of_text       db 0
+
+
 WriteText           proc
 
-                    push bp
-                    mov bp, 80h
+                    mov si, number_of_arguments
 
                     xor ax, ax
-                    mov al, [bp]                                ; length of arguments (without text) is in AL
-                    pop bp
+                    mov al, [si]                                ; length of arguments (without text) is in AL
 
-                    sub di, 82h
+                    sub di, offset_of_arguments
                     cmp di, ax
                     jne @@Write_Text
                     jmp @@Exit
 
 
-@@Write_Text:       sub ax, di
-                    sub ax, 1                                   ; length of text is in AL, AH = 0
+@@Write_Text:       mov cx, bp
+                    mov color_of_text, cl
+
+                    sub ax, di
+                    dec ax                                      ; length of text is in AL, AH = 0
+                    mov length_of_text, ax
                     add di, 82h                                 ; DI -> text 
 
-                    sub dl, 2
-                    cmp al, dl
+                    sub dl, side_offset
+                    cmp al, dl                                  ; max length of text is in DL
                     jna @@One_Line
                     jmp @@Many_Lines
 
-@@One_Line:         push ax
+@@One_Line:         push ax                                     ; saves length of text
 
                     sub dl, al
                     mov al, dl
@@ -166,63 +183,50 @@ WriteText           proc
                     div ch                                      ; X offset is in AL
                     xor ah, ah                                  ; clears remainder
 
-                    add bx, 2                               
+@@Correct_X:        add bx, side_offset                               
                     add bx, ax                                  ; corrects video segment coordinates
                     add bx, ax
 
                     xor ax, ax
-                    sub dh, 2
                     mov al, dh
                     div ch
-                    add ah, al                                  ; Y offset is in AH
+                    add al, ah
+                    dec al                                      ; Y offset is in AL
 
-@@Add:              cmp ah, 0
+@@Correct_Y:        cmp al, 0
                     je @@Correct_BX                 
                     add bx, new_line                            ; corrects video segment coordinates
-                    dec ah
-                    jmp @@Add
+                    dec al
+                    jmp @@Correct_Y
 
 @@Correct_BX:       pop ax
                     mov cx, ax
 
-@@Next_Symbol:      push cx
-                    mov cx, bp
-
-                    mov dh, [di]
+@@Next_Symbol:      mov dh, [di]
                     mov byte ptr es:[bx],   dh
-                    mov byte ptr es:[bx+1], cl
+                    mov dh, color_of_text
+                    mov byte ptr es:[bx+1], dh
 
-                    add bx, 2
+                    add bx, size_of_pixel
                     inc di
-                    pop cx
+
                     loop @@Next_Symbol
                     jmp @@Exit
 
 
-@@Many_Lines:       
-                    ;push ax dx
-                    ;mov dl, "*"
-                    ;mov ah, 02h
-                    ;int 21h
-                    ;pop dx ax
-
+@@Many_Lines:       add bx, side_offset
 
                     div dl
-                    cmp ah, 0
-                    je @@Skip
+                    cmp ah, 0                                   ; checks remainder
+                    je @@Skip                                   ;
                     inc al
 
-@@Skip:             xor ah, ah              ; in AL number of lines, AH = 0
-
-                    sub dh, 2
+@@Skip:             xor ah, ah                                  ; in AL number of lines, AH = 0
 
                     sub dh, al
                     mov al, dh
                     mov ch, 2
                     div ch
-                    inc al
-
-                    add bx, 2
 
 @@Adde:             cmp al, 0
                     je @@Exitrr                
@@ -231,36 +235,37 @@ WriteText           proc
                     jmp @@Adde         
 
                           
-@@Exitrr:           
-                    xor ax, ax
+@@Exitrr:           xor ax, ax
                     mov dh, 0
+                    mov si, length_of_text
 
-@@Next_Symbolr:     push cx
+@@Next_Symbolr:     cmp si, 0
+                    je @@Exit
+                    push cx
                     mov cx, bp
 
-                    inc al
                     cmp al, dl
                     jne @@Skippp
                     add bx, new_line
+                    mov dh, 0
                     sub bx, dx
                     sub bx, dx
+                    xor al, al
 
 
 @@Skippp:           mov dh, [di]
                     mov byte ptr es:[bx],   dh
                     mov byte ptr es:[bx+1], cl
+                    inc al
 
-                    add bx, 2
+                    add bx, size_of_pixel
                     inc di
                     pop cx
-                    loop @@Next_Symbolr
-                    jmp @@Exit
+                    dec si
+                    jmp @@Next_Symbolr
 
 
-
-@@Exit:            
-
-                    ret
+@@Exit:             ret
                     endp
 ;-----------------------------------------------------------
 
@@ -332,7 +337,7 @@ DrawFrame           proc
                     endp
 
 Small_Height        db "ERROR: height is too small$"
-Small_Width         db "ERROR: width is too small$"
+Small_Width         db "ERROR:  width is too small$"
 
 ;-----------------------------------------------------------
 
@@ -353,16 +358,16 @@ Small_Width         db "ERROR: width is too small$"
 size_of_pixel       EQU 2
 
 DrawLine            proc
-
                     push bx dx
+
                     sub dl, 2
 
                     mov ch, [si]                                ; sets the 1st symbol for drawing
 
                     mov byte ptr es:[bx],   ch
                     mov byte ptr es:[bx+1], ah
-                    add bx, size_of_pixel
 
+                    add bx, size_of_pixel
                     mov ch, [si+1]                              ; sets the 2nd symbol for drawing
 
 @@Next_Symbol:      cmp dl, 0
@@ -370,6 +375,7 @@ DrawLine            proc
 
                     mov byte ptr es:[bx],   ch
                     mov byte ptr es:[bx+1], al
+
                     add bx, size_of_pixel
                     dec dl
                     jmp @@Next_Symbol
@@ -411,9 +417,9 @@ powered_base        dw 0
 result              dw 0
 
 ReadNumber          proc
+                    push ax bx cx bp
 
                     mov result, 0
-                    push ax bx cx bp
                     
                     mov base, bx
 
@@ -433,7 +439,7 @@ ReadNumber          proc
                     mov bl, [di]
                     mov cx, bp
 
-@@Next:             cmp bl, 39h                                 ; compares with '9'              
+@@Next:             cmp bl, '9'              
                     ja @@Letter
                     sub bl, '0'
                     jmp @@Digit
@@ -474,12 +480,11 @@ ReadNumber          proc
 ;-----------------------------------------------------------
 GetCoordinates      proc
                     push ax bx dx
-
+                    xor bx, bx
                     xor dx, dx
+
                     mov dh, size_of_pixel
                     mov dl, new_line
-
-                    xor bx, bx
 
                     mov al, ch
                     dec al
