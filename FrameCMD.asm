@@ -34,29 +34,16 @@ Start:              call GetArguments
 ;                   BP = frame type
 ;                   DI = address of array of custom symbols
 ;-----------------------------------------------------------
-number_of_arguments EQU 80h
 offset_of_arguments EQU 82h
 
 GetArguments        proc
 
-                    xor ax, ax
-                    mov di, number_of_arguments
-                    mov al, [di]                                ; puts ' ' to the end of cmd arguments
-                    add di, ax
-                    inc di
-                    mov byte ptr es:[di], ' '
+                    call PutSpace                               ; puts a space symbol to the end of CMD arguments
 
-                    mov di, offset_of_arguments                 ; sets the beginning of cmd arguments
+                    mov di, offset_of_arguments
                     mov bp, 10d                                 ; coordinates, height and width are in decimal format
 
-                    call ReadNumber                             ; gets X coordinate
-                    mov ch, dl
-
-                    call ReadNumber                             ; gets Y coordinate
-                    mov cl, dl
-
-                    call GetCoordinates                         ; gets video segment coordinates
-                    mov bx, cx                                  ; saves in BX
+                    call GetFrameCoordinates
 
                     call ReadNumber                             ; gets height
                     mov ch, dl
@@ -72,14 +59,68 @@ GetArguments        proc
                     mov al, dl                                  ; saves colors in AX
 
                     call ReadNumber                             ; gets frame type
-                    push dx                                     ; and pushes it in stack
+                    push dx
 
                     call ReadNumber                             ; gets color of text
                     mov si, dx                                  
 
                     mov dx, cx
                     mov cx, si
-                    pop bp
+                    pop bp                                      ; saves frame type in BP
+
+                    ret
+                    endp
+;-----------------------------------------------------------
+
+
+
+;-----------------------------------------------------------
+; Puts a space symbol to the end of CMD arguments
+; in order to read numbers correctly
+;-----------------------------------------------------------
+; Entry:            None
+; Expects:          ES -> PSP
+; Destroys:         AX, DI
+; Exit:             None
+;-----------------------------------------------------------
+number_of_arguments EQU 80h
+
+PutSpace            proc
+
+                    xor ax, ax
+                    mov di, number_of_arguments
+                    mov al, [di]
+                    add di, ax
+
+                    inc di
+                    mov byte ptr es:[di], ' '
+
+                    ret
+                    endp
+;-----------------------------------------------------------
+
+
+
+;-----------------------------------------------------------
+; Gets frame coordinates by reading two decimal numbers
+; and calculating video segment coordinates
+;-----------------------------------------------------------
+; Entry:            BP = base of numbers
+;                   DI = offset of array   
+; Expects:          None
+; Destroys:         CX, DI++
+; Exit:             BX
+;-----------------------------------------------------------
+GetFrameCoordinates proc
+
+                    call ReadNumber                             ; gets X coordinate
+                    mov ch, dl
+
+                    call ReadNumber                             ; gets Y coordinate
+                    mov cl, dl
+
+                    call GetCoordinates                         ; gets video segment coordinates
+                    mov bx, cx                                  ; saves in BX
 
                     ret
                     endp
@@ -295,7 +336,7 @@ DrawFrame           proc
                     jb @@Small_Width
 
                     push ax
-                    mov al, ah                                  ; sets color for space symbol for the 1st line
+                    mov al, ah                                  ; sets color for space symbol for the first line
                     call DrawLine
 
                     sub dh, 2
@@ -325,7 +366,7 @@ DrawFrame           proc
 
 @@Normal_Exit:      push ax
                     add si, next_3_symbols
-                    mov al, ah                                  ; sets color for space symbol for the 1st line
+                    mov al, ah                                  ; sets color for space symbol for the last line
                     call DrawLine
                     pop ax
 
@@ -355,47 +396,29 @@ Small_Width         db "ERROR:  width is too small$"
 size_of_pixel       EQU 2
 
 DrawLine            proc
-                    push bx cx dx
+                    push ax bx cx di
 
-                    sub dl, 2
+                    xor cx, cx
+                    mov cl, dl
+                    mov di, bx
+                    mov bx, ax
 
-                    mov ch, [si]                                ; sets the 1st symbol for drawing
+                    mov al, [si]                                ; sets the 1st symbol of line
+                    mov ah, bh
+                    stosw
 
-                    mov byte ptr es:[bx],   ch
-                    mov byte ptr es:[bx+1], ah
+                    sub cx, 2
+                    mov al, [si+1]                              ; sets the 2nd symbol of line
+                    mov ah, bl
+                    rep stosw
 
-                    add bx, size_of_pixel
-                    mov ch, [si+1]                              ; sets the 2nd symbol for drawing
+                    mov al, [si+2]                              ; sets the 3rd symbol of line
+                    mov ah, bh
+                    stosw
 
-@@Next_Symbol:      cmp dl, 0
-                    je @@Exit
-
-                    mov byte ptr es:[bx],   ch
-                    mov byte ptr es:[bx+1], al
-
-                    add bx, size_of_pixel
-                    dec dl
-                    jmp @@Next_Symbol
-
-@@Exit:             mov ch, [si+2]                              ; sets the 3rd symbol for drawing
-                    mov byte ptr es:[bx],   ch
-                    mov byte ptr es:[bx+1], ah
-
-                    pop dx cx bx
+                    pop di cx bx ax
                     ret
                     endp
-;-----------------------------------------------------------
-
-
-
-;-----------------------------------------------------------
-
-Type1               db 0DAh, 0C4h, 0BFh, 0B3h, ' ', 0B3h, 0C0h, 0C4h, 0D9h
-Type2               db 0C9h, 0CDh, 0BBh, 0BAh, ' ', 0BAh, 0C8h, 0CDh, 0BCh   
-Type3               db 4 DUP(0B0h), ' ', 4 DUP(0B0h)
-Type4               db 4 DUP(3h),   ' ', 4 DUP(3h)
-CustomType          db 9 DUP(0)
-
 ;-----------------------------------------------------------
 
 
@@ -417,22 +440,22 @@ ReadNumber          proc
                     push ax bx cx bp
 
                     mov result, 0
-                    
                     mov base, bp
+                    mov powered_base, 1                         ; sets start value of powered base
 
                     xor bx, bx
                     xor bp, bp
+
                     mov bl, [di]
 
 @@Next_Digit:       cmp bl, ' '
                     je @@Start
-                    inc bp                                      ; counts number of digits
+                    inc bp                                      ; counts number of digits in BP
                     inc di
                     mov bl, [di]
                     jmp @@Next_Digit
 
-@@Start:            mov powered_base, 1                         ; sets start value of powered base
-                    dec di
+@@Start:            dec di
                     mov bl, [di]
                     mov cx, bp
 
@@ -478,7 +501,6 @@ ReadNumber          proc
 GetCoordinates      proc
                     push ax bx dx
                     xor bx, bx
-                    xor dx, dx
 
                     mov dh, size_of_pixel
                     mov dl, new_line
@@ -498,6 +520,18 @@ GetCoordinates      proc
                     pop dx bx ax
                     ret 
                     endp
+;-----------------------------------------------------------
+
+
+
+;-----------------------------------------------------------
+
+Type1               db 0DAh, 0C4h, 0BFh, 0B3h, ' ', 0B3h, 0C0h, 0C4h, 0D9h
+Type2               db 0C9h, 0CDh, 0BBh, 0BAh, ' ', 0BAh, 0C8h, 0CDh, 0BCh   
+Type3               db 4 DUP(0B0h), ' ', 4 DUP(0B0h)
+Type4               db 4 DUP(3h),   ' ', 4 DUP(3h)
+CustomType          db 9 DUP(0)
+
 ;-----------------------------------------------------------
 
 
