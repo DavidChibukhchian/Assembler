@@ -139,34 +139,36 @@ GetFrameCoordinates proc
 ; Exit:             SI = offset of array of drawing symbols
 ;                   DI = address of text
 ;-----------------------------------------------------------
+custom_type_mode    EQU 5d
 number_of_frame_symbols EQU 9d
 
 SetFrameType        proc
                     push ax cx
 
                     mov cx, bp
-                    cmp cx, 5d                                  ; number of custom type
+                    cmp cx, custom_type_mode
                     je @@Custom_Type
 
                     dec cx
                     mov si, offset Type1
 
 @@Next_Type:        cmp cx, 0                                   ; sets offset of array of symbols
-                    je @@Exit                                   ; in order to not use comparings
+                    je @@Exit                                   ; instead of using comparings
                     add si, number_of_frame_symbols
                     dec cx
                     jmp @@Next_Type
 
 @@Custom_Type:      mov bp, offset CustomType
                     mov cx, number_of_frame_symbols
+                    mov si, di
 
-@@Next:             mov ah, [di]                                ; puts custom symbols into array          
-                    mov [bp], ah
+@@Next:             lodsb
+                    mov [bp], al
                     inc di
                     inc bp
                     loop @@Next
-                    inc di
 
+                    inc di
                     mov si, offset CustomType
 
 @@Exit:             pop cx ax
@@ -177,15 +179,128 @@ SetFrameType        proc
 
 
 ;-----------------------------------------------------------
+; Draws a frame on the screen
+;-----------------------------------------------------------
+; Entry:            AH = color of frame symbol
+;                   AL = color of space symbol
+;                   BX = video segment coordinates
+;                   DH = height of frame
+;                   DL = width  of frame
+;                   SI = offset of array of drawing symbols
+; Expects:          ES -> video segment
+; Destroys:         SI
+; Exit:             None
+;-----------------------------------------------------------
+new_line            EQU 160d
+next_3_symbols      EQU 3d
+min_length_of_side  EQU 2d
+
+DrawFrame           proc
+                    push bx dx
+
+                    cmp dh, min_length_of_side
+                    jb @@Small_Height
+
+                    cmp dl, min_length_of_side
+                    jb @@Small_Width
+
+                    push ax
+                    mov al, ah                                  ; sets color for space symbol for the first line
+                    call DrawLine
+
+                    sub dh, 2
+                    add bx, new_line
+                    add si, next_3_symbols                      ; sets next 3 symbols for drawing
+                    pop ax
+
+@@Next_Line:        cmp dh, 0
+                    je @@Normal_Exit
+                    call DrawLine
+
+                    add bx, new_line
+                    dec dh
+                    jmp @@Next_Line
+
+
+@@Small_Height:     mov ah, 09h
+                    mov dx, offset Small_Height
+                    int 21h
+                    jmp @@Exit
+
+@@Small_Width:      mov ah, 09h
+                    mov dx, offset Small_Width
+                    int 21h
+                    jmp @@Exit
+
+
+@@Normal_Exit:      push ax
+                    add si, next_3_symbols
+                    mov al, ah                                  ; sets color for space symbol for the last line
+                    call DrawLine
+                    pop ax
+
+@@Exit:             pop dx bx
+                    ret
+                    endp
+
+Small_Height        db "ERROR: height is too small", 10d, '$'
+Small_Width         db "ERROR: width is too small",  10d, '$'
+;-----------------------------------------------------------
+
+;-----------------------------------------------------------
+; Draws a line on the screen
+;-----------------------------------------------------------
+; Entry:            AH = color of the 1st and the 3rd symbol
+;                   AL = color of the 2nd symbol
+;                   BX = video segment coordinates
+;                   DL = width
+;                   SI = offset of array of three symbols
+; Expects:          ES -> video segment
+; Destroys:         None
+; Exit:             None
+;-----------------------------------------------------------
+size_of_pixel       EQU 2d
+
+DrawLine            proc
+                    push ax bx cx di
+
+                    xor cx, cx
+                    mov cl, dl
+                    mov di, bx
+                    mov bx, ax
+
+                    mov al, [si]                                ; sets the 1st symbol of line
+                    mov ah, bh
+                    stosw
+
+                    sub cx, 2
+                    mov al, [si+1]                              ; sets the 2nd symbol of line
+                    mov ah, bl
+                    rep stosw
+
+                    mov al, [si+2]                              ; sets the 3rd symbol of line
+                    mov ah, bh
+                    stosw
+
+                    pop di cx bx ax
+                    ret
+                    endp
+;-----------------------------------------------------------
+
+
+
+;-----------------------------------------------------------
 ; Writes text in the frame or skips it
 ;-----------------------------------------------------------
 ; Entry:            CX = color of text
+;                   DH = height of frame
+;                   DL = width  of frame
 ;                   DI = address of text
 ; Expects:          ES -> PSP
 ; Destroys:         AX, BX, CX, DX, DI, SI
 ; Exit:             None
 ;-----------------------------------------------------------
-side_offset         EQU 4
+side_offset         EQU 4d
 
 length_of_text      dw 0
 color_of_text       db 0
@@ -208,7 +323,7 @@ WriteText           proc
                     sub ax, di
                     dec ax                                      ; length of text is in AL, AH = 0
                     mov length_of_text, ax
-                    add di, 82h                                 ; DI -> text 
+                    add di, offset_of_arguments                 ; DI -> text 
 
                     sub dl, side_offset
                     cmp al, dl                                  ; max length of text is in DL
@@ -304,120 +419,6 @@ WriteText           proc
 
 
 @@Exit:             ret
-                    endp
-;-----------------------------------------------------------
-
-
-
-;-----------------------------------------------------------
-; Draws a frame on the screen
-;-----------------------------------------------------------
-; Entry:            AH = color of frame symbol
-;                   AL = color of space symbol
-;                   BX = video segment coordinates
-;                   DH = height of frame
-;                   DL = width  of frame
-;                   SI = offset of array of drawing symbols
-; Expects:          ES -> video segment
-; Destroys:         SI
-; Exit:             None
-;-----------------------------------------------------------
-new_line            EQU 160d
-next_3_symbols      EQU 3
-min_length_of_side  EQU 2
-
-DrawFrame           proc
-                    push bx dx
-
-                    cmp dh, min_length_of_side
-                    jb @@Small_Height
-
-                    cmp dl, min_length_of_side
-                    jb @@Small_Width
-
-                    push ax
-                    mov al, ah                                  ; sets color for space symbol for the first line
-                    call DrawLine
-
-                    sub dh, 2
-                    add bx, new_line
-                    add si, next_3_symbols                      ; sets next 3 symbols for drawing
-                    pop ax
-
-@@Next_Line:        cmp dh, 0
-                    je @@Normal_Exit
-                    call DrawLine
-
-                    add bx, new_line
-                    dec dh
-                    jmp @@Next_Line
-
-
-@@Small_Height:     mov ah, 09h
-                    mov dx, offset Small_Height
-                    int 21h
-                    jmp @@Exit
-
-@@Small_Width:      mov ah, 09h
-                    mov dx, offset Small_Width
-                    int 21h
-                    jmp @@Exit
-
-
-@@Normal_Exit:      push ax
-                    add si, next_3_symbols
-                    mov al, ah                                  ; sets color for space symbol for the last line
-                    call DrawLine
-                    pop ax
-
-@@Exit:             pop dx bx
-                    ret
-                    endp
-
-Small_Height        db "ERROR: height is too small$"
-Small_Width         db "ERROR:  width is too small$"
-
-;-----------------------------------------------------------
-
-
-
-;-----------------------------------------------------------
-; Draws a line on the screen
-;-----------------------------------------------------------
-; Entry:            AH = color of the 1st and the 3rd symbol
-;                   AL = color of the 2nd symbol
-;                   BX = video segment coordinates
-;                   DL = width
-;                   SI = offset of array of three symbols
-; Expects:          ES -> video segment
-; Destroys:         None
-; Exit:             None
-;-----------------------------------------------------------
-size_of_pixel       EQU 2
-
-DrawLine            proc
-                    push ax bx cx di
-
-                    xor cx, cx
-                    mov cl, dl
-                    mov di, bx
-                    mov bx, ax
-
-                    mov al, [si]                                ; sets the 1st symbol of line
-                    mov ah, bh
-                    stosw
-
-                    sub cx, 2
-                    mov al, [si+1]                              ; sets the 2nd symbol of line
-                    mov ah, bl
-                    rep stosw
-
-                    mov al, [si+2]                              ; sets the 3rd symbol of line
-                    mov ah, bh
-                    stosw
-
-                    pop di cx bx ax
-                    ret
                     endp
 ;-----------------------------------------------------------
 
