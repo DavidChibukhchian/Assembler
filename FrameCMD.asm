@@ -247,6 +247,8 @@ Small_Height        db "ERROR: height is too small", 10d, '$'
 Small_Width         db "ERROR: width is too small",  10d, '$'
 ;-----------------------------------------------------------
 
+
+
 ;-----------------------------------------------------------
 ; Draws a line on the screen
 ;-----------------------------------------------------------
@@ -296,19 +298,15 @@ DrawLine            proc
 ;                   DH = height of frame
 ;                   DL = width  of frame
 ;                   DI = address of text
-; Expects:          ES -> PSP
+; Expects:          ES -> video segment
 ; Destroys:         AX, BX, CX, DX, DI, SI
 ; Exit:             None
 ;-----------------------------------------------------------
 side_offset         EQU 4d
 
-length_of_text      dw 0
-color_of_text       db 0
-
 WriteText           proc
 
                     mov si, number_of_arguments
-
                     xor ax, ax
                     mov al, [si]                                ; length of arguments (without text) is in AL
 
@@ -321,16 +319,16 @@ WriteText           proc
 @@Write_Text:       mov color_of_text, cl
 
                     sub ax, di
-                    dec ax                                      ; length of text is in AL, AH = 0
+                    dec ax                                      ; length of the text is in AL, AH = 0
                     mov length_of_text, ax
                     add di, offset_of_arguments                 ; DI -> text 
 
                     sub dl, side_offset
-                    cmp al, dl                                  ; max length of text is in DL
+                    cmp al, dl                                  ; max length of the text is in DL
                     jna @@One_Line
                     jmp @@Many_Lines
 
-@@One_Line:         push ax                                     ; saves length of text
+@@One_Line:         push ax                                     ; saves length of the text
 
                     sub dl, al
                     mov al, dl
@@ -358,14 +356,13 @@ WriteText           proc
 @@StartWriting:     pop ax
                     mov cx, ax
 
-@@Next_Symbol:      mov dh, [di]
-                    mov byte ptr es:[bx],   dh
-                    mov dh, color_of_text
-                    mov byte ptr es:[bx+1], dh
+                    mov si, di
+                    mov di, bx
+                    mov ah, color_of_text
 
-                    add bx, size_of_pixel
-                    inc di
-
+@@Next_Symbol:      mov al, [si]
+                    stosw
+                    inc si
                     loop @@Next_Symbol
                     jmp @@Exit
 
@@ -390,36 +387,38 @@ WriteText           proc
                     jmp @@Correct_BX  
 
                           
-@@StartWriting_:    xor ax, ax
-                    mov dh, 0
-                    mov si, length_of_text
+@@StartWriting_:    xor dh, dh
+                    mov bp, length_of_text                      ; number of remaining symbols
 
-@@Next_Symbol_:     cmp si, 0
+                    mov si, di                                  ; address of text is in SI
+                    mov ah, color_of_text
+                    mov di, bx                                  ; video segment coordinates are in DI
+                    xor cx, cx
+
+@@Next_Symbol_:     cmp bp, 0
                     je @@Exit
 
-                    cmp al, dl
+                    cmp cl, dl                                  ; compares with max length of the text
                     jne @@NoCarriageReturn
-                    add bx, new_line
-                    mov dh, 0
-                    sub bx, dx
-                    sub bx, dx
-                    xor al, al
 
+                    add di, new_line                            ; \n
+                    sub di, dx                                  ; \r
+                    sub di, dx
+                    xor cl, cl                                  ; resets counter
 
-@@NoCarriageReturn: mov dh, [di]
-                    mov byte ptr es:[bx],   dh
-                    mov dh, color_of_text
-                    mov byte ptr es:[bx+1], dh
-
-                    inc al
-                    add bx, size_of_pixel
-                    inc di
-                    dec si
+@@NoCarriageReturn: mov al, [si]
+                    stosw
+                    inc si
+                    inc cl                                      ; counts a number of symbols in the current line
+                    dec bp
                     jmp @@Next_Symbol_
 
 
 @@Exit:             ret
                     endp
+                    
+length_of_text      dw 0
+color_of_text       db 0
 ;-----------------------------------------------------------
 
 
@@ -433,10 +432,6 @@ WriteText           proc
 ; Destroys:         DI++
 ; Exit:             DX
 ;-----------------------------------------------------------
-base                dw 0
-powered_base        dw 0
-result              dw 0
-
 ReadNumber          proc
                     push ax bx cx bp
 
@@ -486,6 +481,10 @@ ReadNumber          proc
                     pop bp cx bx ax
                     ret
                     endp
+
+base                dw 0
+powered_base        dw 0
+result              dw 0
 ;-----------------------------------------------------------
 
 
