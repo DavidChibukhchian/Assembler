@@ -143,6 +143,7 @@ custom_type_mode    EQU 5d
 number_of_frame_symbols EQU 9d
 
 SetFrameType        proc
+                    cld
                     push ax cx
 
                     mov cx, bp
@@ -196,6 +197,7 @@ next_3_symbols      EQU 3d
 min_length_of_side  EQU 2d
 
 DrawFrame           proc
+                    cld
                     push bx dx
 
                     cmp dh, min_length_of_side
@@ -305,6 +307,7 @@ DrawLine            proc
 side_offset         EQU 4d
 
 WriteText           proc
+                    cld
 
                     mov si, number_of_arguments
                     xor ax, ax
