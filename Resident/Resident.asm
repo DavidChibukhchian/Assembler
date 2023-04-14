@@ -3,8 +3,6 @@
 org 100h
 locals @@
 
-Hot_Key 			EQU 215d								; F11 87 - 215
-
 Start:				cli
 					xor bx, bx
 					mov es, bx
@@ -15,7 +13,7 @@ Start:				cli
 					mov ax, es:[bx+2]
 					mov old_08_SEG, ax
 
-					mov es:[bx], offset New_08_int			; puts new 8 int vector
+					mov es:[bx], offset New_08_Int			; puts new 8 int vector
 					mov ax, cs
 					mov es:[bx+2], ax 
 				
@@ -31,6 +29,8 @@ Start:				cli
 					sti
 
 					
+					call PrepareFrame
+
 					mov ax, 3100h
 					mov dx, offset Program_End				; terminates and stay resident
 					shr dx, 4
@@ -39,21 +39,24 @@ Start:				cli
 
 				
 
+
+;-----------------------------------------------------------
+;
 ;-----------------------------------------------------------
 New_08_Int			proc
 
-					cmp mode, 4d
+					cmp mode, 3d
 					jna @@Skip
 					mov mode, 0
 					jmp @@Exit
 
-@@Skip:				cmp mode, 1
+@@Skip:				cmp mode, MODE_1
 					je @@Mode_1
 
-					cmp mode, 2
+					cmp mode, MODE_2
 					je @@Mode_2
 
-					cmp mode, 3
+					cmp mode, MODE_3
 					je @@Mode_3
 
 					jmp @@Exit
@@ -61,7 +64,7 @@ New_08_Int			proc
 
 @@Mode_1:			call Save
 					call Show
-					mov mode, 2
+					mov mode, MODE_2
 					jmp @@Exit
 
 
@@ -71,8 +74,7 @@ New_08_Int			proc
 
 
 @@Mode_3:			call Drop
-					mov mode, 0
-					jmp @@Exit
+					mov mode, MODE_0
 
 
 @@Exit:				db 0EAh									; jmp to std 08 interrupter
@@ -84,30 +86,32 @@ New_08_Int			proc
 
 
 
+
+;-----------------------------------------------------------
+;
 ;-----------------------------------------------------------
 New_09_Int			proc
-			
-					push ax									; save registers
+					push ax
 					
 					in al, 60h								; save key in AH
-					
 					cmp al, Hot_Key
 					jne @@Skip
 
 					inc mode
-					jmp @@End
+					jmp @@Exit
 				
 @@Skip:				pop ax
 					db 0EAh									; jmp to std 09 interrupter
 					old_09_OFS dw 0
 					old_09_SEG dw 0
 
-@@End:				in al, 61H
+@@Exit:				in al, 61h
 					mov ah, al
 					or al, 80h
 					out 61h, al
 					xchg ah, al
 					out 61h, al
+
 					mov al, 20h
 					out 20h, al
 
@@ -120,12 +124,12 @@ New_09_Int			proc
 
 
 ;-----------------------------------------------------------
-; Saves interface data to the buffer
+; Saves an interface image to the buffer
 ;-----------------------------------------------------------
-; Entry:
-; Expects:			ES -> video segment
-; Destroys:
-; Exit:
+; Entry:			None
+; Expects:			None
+; Destroys:			None
+; Exit:				DI -> saved image
 ;-----------------------------------------------------------
 Save				proc
 					cld
@@ -145,10 +149,11 @@ Save				proc
 
 @@Next:				push cx
 					mov cx, length_of_frame
-					push si
 
+					push si
 					rep movsw
 					pop si
+
 					add si, new_line
 					pop cx
 					loop @@Next
@@ -165,10 +170,10 @@ Save				proc
 ;-----------------------------------------------------------
 ; Drops the saved image on the screen
 ;-----------------------------------------------------------
-; Entry:
-; Expects:
-; Destroys:
-; Exit:
+; Entry:			None
+; Expects:			None
+; Destroys:			None
+; Exit:				None
 ;-----------------------------------------------------------
 Drop				proc
 					cld
@@ -188,13 +193,15 @@ Drop				proc
 
 @@Next:				push cx
 					mov cx, length_of_frame
-					push di
 
+					push di
 					rep movsw
 					pop di
+
 					add di, new_line
 					pop cx
 					loop @@Next
+
 
 					pop es ds di si cx bx
 					ret
@@ -225,11 +232,11 @@ Check				proc
 
 					mov cx, height_of_frame
 
-@@Next:				push cx
+@@Next_Line:		push cx
 					mov cx, length_of_frame
 					push di
 
-@@Next_2:			mov ax, cs:[si]			; from image
+@@Next:				mov ax, cs:[si]			; from image
 					mov bx, es:[di]			; from display
 					cmp ax, bx
 					je @@Skip
@@ -238,12 +245,12 @@ Check				proc
 @@Skip:				add si, size_of_pixel
 					add di, size_of_pixel
 					add bp, size_of_pixel
-					loop @@Next_2
+					loop @@Next
 
 					pop di
 					add di, new_line
 					pop cx
-					loop @@Next
+					loop @@Next_Line
 
 
 					pop es bp di si cx bx ax
@@ -263,43 +270,20 @@ Check				proc
 ; Exit:
 ;-----------------------------------------------------------
 Show				proc
-					push ax bx dx si bp es
-
-					mov ah, 3Ch
-					mov al, 3Ch
-					mov bx, offset image_buffer
-					mov dh, height_of_frame
-					mov dl, length_of_frame
 
 
-					mov si, offset Symbols
-					mov byte ptr [si],   0C9h
-					mov byte ptr [si+1], 0CDh
-					mov byte ptr [si+2], 0BBh
-					mov byte ptr [si+3], 0BAh
-					mov byte ptr [si+4], ' '
-					mov byte ptr [si+5], 0BAh
-					mov byte ptr [si+6], 0C8h
-					mov byte ptr [si+7], 0CDh
-					mov byte ptr [si+8], 0BCh
-					
-					mov bp, cs
-					mov es, bp
-					call DrawFrame
+
+					; print registers
+
+					call DropFrame
 
 
-					call DropImage
-
-
-					pop es bp si dx bx ax
 					ret
 					endp
-
-Symbols 			db 0C9h, 0CDh, 0BBh, 0BAh, ' ', 0BAh, 0C8h, 0CDh, 0BCh
 ;-----------------------------------------------------------
 
 
-DropImage			proc
+DropFrame			proc
 					cld
 					push bx cx si di ds es
 
@@ -317,17 +301,104 @@ DropImage			proc
 
 @@Next:				push cx
 					mov cx, length_of_frame
-					push di
 
+					push di
 					rep movsw
 					pop di
+
 					add di, new_line
 					pop cx
 					loop @@Next
 
+
 					pop es ds di si cx bx
 					ret
 					endp
+
+
+;-----------------------------------------------------------
+; Prepares frame
+;-----------------------------------------------------------
+; Entry:
+; Expects:
+; Destroys:
+; Exit:
+;-----------------------------------------------------------
+PrepareFrame		proc
+					push ax bx dx si bp es
+
+					mov ah, 3Ch
+					mov al, 3Ch
+					mov bx, offset image_buffer
+					mov dh, height_of_frame
+					mov dl, length_of_frame
+
+					mov si, offset frame_symbols
+					mov byte ptr [si],   0C9h
+					mov byte ptr [si+1], 0CDh
+					mov byte ptr [si+2], 0BBh
+					mov byte ptr [si+3], 0BAh
+					mov byte ptr [si+4], ' '
+					mov byte ptr [si+5], 0BAh
+					mov byte ptr [si+6], 0C8h
+					mov byte ptr [si+7], 0CDh
+					mov byte ptr [si+8], 0BCh
+	
+					mov bp, cs
+					mov es, bp
+					call DrawFrame
+
+					call PrintRegisterNames
+
+					pop es bp si dx bx ax
+					ret
+					endp
+;-----------------------------------------------------------
+
+
+
+
+;-----------------------------------------------------------
+; Prints register names
+;-----------------------------------------------------------
+; Entry:
+; Expects:
+; Destroys:
+; Exit:
+;-----------------------------------------------------------
+PrintRegisterNames	proc
+					push ax cx si di es
+
+					mov cx, cs
+					mov es, cx
+
+					mov di, offset image_buffer
+					add di, length_of_frame
+					add di, length_of_frame
+					add di, size_of_pixel
+					add di, size_of_pixel
+
+					mov cx, number_of_registers
+					mov ah, 3Ch ; color
+					mov si, offset register_names
+
+@@Next:				push di
+					mov al, [si]
+					stosw
+					mov al, [si+1]
+					stosw
+					pop di
+
+					add di, length_of_frame
+					add di, length_of_frame
+					add si, 2
+
+					loop @@Next
+
+					pop es di si cx ax
+					ret
+					endp
+;-----------------------------------------------------------
 
 
 
@@ -335,12 +406,22 @@ DropImage			proc
 
 width_of_display	EQU 80d
 new_line			EQU 160d
-size_of_pixel		EQU 2d
+size_of_pixel		EQU 2
 
+MODE_0				EQU 0
+MODE_1				EQU 1
+MODE_2				EQU 2
+MODE_3				EQU 3
+
+Hot_Key 			EQU 215d								; F11 87 - 215
 length_of_frame		EQU 11d
-height_of_frame		EQU 16d
+height_of_frame		EQU 14d
 top_left_corner		EQU 0d
 ;top_left_corner		EQU (width_of_display - length_of_frame) * 2d + new_line
+frame_symbols 		db 0C9h, 0CDh, 0BBh, 0BAh, ' ', 0BAh, 0C8h, 0CDh, 0BCh
+
+number_of_registers	EQU 12d
+register_names		db "axbxcxdxsidibpspdsessscs"
 
 mode				db 0
 saved_buffer		db height_of_frame * length_of_frame * 2d DUP(0)
@@ -349,6 +430,7 @@ image_buffer		db height_of_frame * length_of_frame * 2d DUP(0)
 include FrameLib.asm
 
 ;-----------------------------------------------------------
+
 
 
 
