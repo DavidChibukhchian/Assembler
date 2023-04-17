@@ -144,3 +144,14 @@ include ResLib.asm
 
 Program_End:
 end					Start
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------> Time
+
+       off             off             on             on             on             off             off             off
+		-               -          Save_Image    Update_Saved   Update_Saved     Drop_Saved          -               -
+			 					   Show_Frame     Show_Frame	 Show_Frame									   
+Mode:	0               0              1              2              2               3               0               0
