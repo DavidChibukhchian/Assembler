@@ -48,7 +48,7 @@ Start:				cli											; disables external interrupts
 ;-----------------------------------------------------------
 ; New interrupt handler of the timer
 ;-----------------------------------------------------------
-; This handler calls different functions from "RLib"
+; This handler calls different functions from "ResLib"
 ; depending on the value of "mode" variable that changes
 ; in some cases.
 ; It calls the old handler in any case after calling
@@ -74,13 +74,13 @@ New_08_Int			proc
 
 
 @@Mode_1:			call Save_Image
-					call Show_Registers
+					call Show_Frame
 					mov mode, MODE_2							; changes mode
 					jmp @@Exit
 
 
 @@Mode_2:			call Update_Saved_Image
-					call Show_Registers
+					call Show_Frame
 					jmp @@Exit
 
 
@@ -102,8 +102,8 @@ New_08_Int			proc
 ; New interrupt handler of the keyboard
 ;-----------------------------------------------------------
 ; This handler scans user's keystrokes.
-; If user presses the hot key, it changes the value of "mode"
-; variable, confirms an interrupt and exits.
+; If user presses the hot key, it changes the value of
+; "mode" variable, confirms an interrupt and exits.
 ; If user presses any other key, calls old handler.
 ;-----------------------------------------------------------
 New_09_Int			proc
@@ -138,7 +138,7 @@ New_09_Int			proc
 
 
 
-include RLib.asm
+include ResLib.asm
 
 
 
