@@ -271,18 +271,18 @@ Check				proc
 ;-----------------------------------------------------------
 Show				proc
 
-
-
-					; print registers
+					call PrintRegisters
 
 					call DropFrame
-
 
 					ret
 					endp
 ;-----------------------------------------------------------
 
 
+
+
+;-----------------------------------------------------------
 DropFrame			proc
 					cld
 					push bx cx si di ds es
@@ -314,6 +314,106 @@ DropFrame			proc
 					pop es ds di si cx bx
 					ret
 					endp
+;-----------------------------------------------------------
+
+
+
+
+;-----------------------------------------------------------
+PrintRegisters		proc
+					push ax bx es
+
+					mov bx, cs
+					mov es, bx
+
+					mov bx, offset image_buffer
+					mov coordinates, bx
+					add coordinates, length_of_frame*2d
+					add coordinates, size_of_pixel*8d
+
+					call PrintRegister
+
+					mov ax, bx
+					call PrintRegister
+
+					mov ax, cx
+					call PrintRegister
+
+					mov ax, dx
+					call PrintRegister
+
+					mov ax, si
+					call PrintRegister
+
+					mov ax, di
+					call PrintRegister
+
+					mov ax, bp
+					call PrintRegister
+
+					mov ax, sp
+					call PrintRegister
+
+					mov ax, ds
+					call PrintRegister
+
+					mov ax, es
+					call PrintRegister
+					
+					mov ax, ss
+					call PrintRegister
+
+					mov ax, cs
+					call PrintRegister
+
+					pop es bx ax
+					ret
+					endp
+coordinates 		dw 0
+;-----------------------------------------------------------
+
+
+
+
+;-----------------------------------------------------------
+PrintRegister		proc
+					push bx cx di
+					std
+
+					mov bx, ax
+					mov di, coordinates
+					mov cx, 4d
+
+@@Next:				and ax, 15d
+					cmp ax, 9d
+					jna @@Digit			; если ax не больше чем 9
+					jmp @@Letter
+
+@@Digit:			add al, '0'
+					jmp @@Continue
+
+@@Letter:			sub al, 10d
+					add al, 'A'
+					jmp @@Continue
+
+@@Continue:			mov ah, 3Ch
+					stosw
+					shr bx, 4d
+					mov ax, bx
+
+					loop @@Next
+
+
+@@Exit:				add di, length_of_frame*2d
+					add di, size_of_pixel*4d
+					mov coordinates, di
+
+					pop di cx bx
+					ret
+					endp
+;-----------------------------------------------------------
+
+
 
 
 ;-----------------------------------------------------------
