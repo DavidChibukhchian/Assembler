@@ -13,10 +13,10 @@
 ;-----------------------------------------------------------
 new_line            EQU 160d
 next_3_symbols      EQU 3d
-min_length_of_side  EQU 2d
 
 DrawFrame           proc
                     cld
+
                     push bx dx
 
                     push ax

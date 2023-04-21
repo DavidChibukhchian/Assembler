@@ -14,9 +14,8 @@ Start:				cli											; disables external interrupts
 					mov ax, es:[bx+2]
 					mov old_08_SEG, ax
 
-					mov es:[bx], offset New_08_Int				; puts new 8th interrupt vector
-					mov ax, cs
-					mov es:[bx+2], ax 
+					mov es:[bx],   offset New_08_Int			; puts new 8th interrupt vector
+					mov es:[bx+2], cs 
 
 
 					mov bx, 9*4d								; address of the old 9th interrupt handler in the table
@@ -25,9 +24,8 @@ Start:				cli											; disables external interrupts
 					mov ax, es:[bx+2]
 					mov old_09_SEG, ax
 					
-					mov es:[bx], offset New_09_Int		
-					mov ax, cs									; puts new 9th interrupt vector
-					mov es:[bx+2], ax
+					mov es:[bx],   offset New_09_Int			; puts new 9th interrupt vector
+					mov es:[bx+2], cs
 
 
 					sti											; enables external interrupts
@@ -48,26 +46,24 @@ Start:				cli											; disables external interrupts
 ;-----------------------------------------------------------
 ; New interrupt handler of the timer
 ;-----------------------------------------------------------
-; This handler calls different functions from "ResLib"
+; This handler calls different functions from "RLib"
 ; depending on the value of "mode" variable that changes
 ; in some cases.
 ; It calls the old handler in any case after calling
 ; further functions.
 ;-----------------------------------------------------------
 New_08_Int			proc
+					push bx
 
-					cmp mode, 3d
-					jna @@Skip
-					mov mode, 0									; initializes the value of "mode" variable
-					jmp @@Exit
+					lea bx, mode
 
-@@Skip:				cmp mode, MODE_1
+@@Skip:				cmp byte ptr cs:[bx], MODE_1				; cmp mode, MODE_1
 					je @@Mode_1
 
-					cmp mode, MODE_2
+					cmp byte ptr cs:[bx], MODE_2				; cmp mode, MODE_2
 					je @@Mode_2
 
-					cmp mode, MODE_3
+					cmp byte ptr cs:[bx], MODE_3				; cmp mode, MODE_3
 					je @@Mode_3
 
 					jmp @@Exit
@@ -75,7 +71,7 @@ New_08_Int			proc
 
 @@Mode_1:			call Save_Image
 					call Show_Frame
-					mov mode, MODE_2							; changes mode
+					mov byte ptr cs:[bx], MODE_2				; mov mode, MODE_2
 					jmp @@Exit
 
 
@@ -85,10 +81,11 @@ New_08_Int			proc
 
 
 @@Mode_3:			call Drop_Saved_Image
-					mov mode, MODE_0							; changes mode
+					mov byte ptr cs:[bx], MODE_0				; mov mode, MODE_0
 
 
-@@Exit:				db 0EAh										; jumps to std 8th interrupter
+@@Exit:				pop bx
+					db 0EAh										; jumps to the old handler
 					old_08_OFS dw 0
 					old_08_SEG dw 0
 
@@ -104,20 +101,21 @@ New_08_Int			proc
 ; This handler scans user's keystrokes.
 ; If user presses the hot key, it changes the value of
 ; "mode" variable, confirms an interrupt and exits.
-; If user presses any other key, calls old handler.
+; If user presses any other key, calls the old handler.
 ;-----------------------------------------------------------
 New_09_Int			proc
-					push ax
-					
+					push ax bx
+
 					in al, 60h									; saves scancode
-					cmp al, Hot_Key
+					cmp al, Hot_Key								; compares with hot key
 					jne @@Skip
 
-					inc mode									; changes mode
+					lea bx, mode
+					inc byte ptr cs:[bx]						; inc mode - changes mode
 					jmp @@Exit
 				
-@@Skip:				pop ax
-					db 0EAh										; jumps to std 9th interrupter
+@@Skip:				pop bx ax
+					db 0EAh										; jumps to the old handler
 					old_09_OFS dw 0
 					old_09_SEG dw 0
 
@@ -131,14 +129,14 @@ New_09_Int			proc
 					mov al, 20h									; sends confirmation to the interrupt controller
 					out 20h, al
 
-					pop ax
+					pop bx ax
 					iret
 					endp
 ;-----------------------------------------------------------
 
 
 
-include ResLib.asm
+include RLib.asm
 
 
 
