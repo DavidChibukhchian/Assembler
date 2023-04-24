@@ -49,31 +49,37 @@ Start:				cli									; disables external interrupts
 ; This handler calls different functions from "RLib"
 ; depending on the value of variable "mode".
 ;
-; Variable "mode" takes on the four values:
+; Variable "mode" takes on the four values which are equal
+; to consecutive natural numbers (in order to change "mode"
+; quickly):
 ;
-;       FRAME_OFF  - Used when the frame isn't shown.
-;	           - Nothing is being done.
+;       FRAME_OFF   - Used when the frame isn't shown.
+;	            - Nothing is being done.
+;                   - Equals 0.
 ;
-;   SAVE_AND_SHOW  - Used just after user presses hot key if
-;                    the previous mode was FRAME_OFF.
-;                  - Calls Save_Image to save an interface
-;                    image in the buffer.
-;                  - Calls Show_Frame to draw a frame with
-;	             registers' values on the screen.
-;                  - Changes "mode" to UPDATE_AND_SHOW.
+;   SAVE_AND_SHOW   - Used just after user presses hot key if
+;                     the previous mode was FRAME_OFF.
+;                   - Calls Save_Image to save an interface
+;		      image in the buffer.
+;                   - Calls Show_Frame to draw a frame with
+;		      registers' values on the screen.
+;                   - Changes "mode" to UPDATE_AND_SHOW.
+;                   - Equals 1.
 ;
-; UPDATE_AND_SHOW  - Used when the frame is shown.
-;		   - Calls Update_Image to save changes and
-;                    update buffer with an interface image.
-;                  - Calls Show_Frame to draw a frame with
-;		     registers' values on the screen.
+; UPDATE_AND_SHOW   - Used when the frame is shown.
+;		    - Calls Update_Image to save changes and
+;                     update buffer with an interface image.
+;                   - Calls Show_Frame to draw a frame with
+;		      registers' values on the screen.
+;                   - Equals 2.
 ;
-;         RESTORE  - Used just after user presses hot key if
-;		     the previous mode was UPDATE_AND_SHOW.
-;                  - Calls Restore_Image to restore an
-;	             interface image from the buffer to the
-;                    video memory.
-;                  - Changes "mode" to FRAME_OFF.
+;         RESTORE   - Used just after user presses hot key if
+;		      the previous mode was UPDATE_AND_SHOW.
+;                   - Calls Restore_Image to restore an
+;		      interface image from the buffer to the
+;                     video memory.
+;                   - Changes "mode" to FRAME_OFF.
+;                   - Equals 3.
 ;
 ; It calls the old handler in any case after calling
 ; further functions.
