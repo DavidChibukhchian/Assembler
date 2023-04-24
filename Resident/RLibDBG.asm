@@ -604,8 +604,14 @@ saved_image			db height_of_frame * length_of_frame * 2d DUP(0)
 image_to_show		db height_of_frame * length_of_frame * 2d DUP(0)
 
 correct_sp			dw 0
+
+
+
 correct_sp_1 		dw 0
 correct_sp_2		dw 0
+
+correct_sp_values	dw 7 DUP(0)
+
 message				db "Different stack pointers in function $"
 
 include FrameLib.asm

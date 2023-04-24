@@ -50,7 +50,7 @@ Save_Image			proc
 ; Destroys:			None
 ; Exit:				None
 ;-----------------------------------------------------------
-Update_Saved_Image	proc
+Update_Image		proc
 					push ax bx cx si di bp es
 
 					lea si, image_to_show
@@ -100,7 +100,7 @@ Update_Saved_Image	proc
 ; Destroys:			None
 ; Exit:				None
 ;-----------------------------------------------------------
-Drop_Saved_Image	proc
+Restore_Image		proc
 					push bx cx si di ds es
 					cld
 
@@ -168,8 +168,7 @@ Show_Frame			proc
 Print_Registers		proc
 					push ax
 
-					mov address, offset image_to_show
-					
+					mov address, offset image_to_show	
 					add address, length_of_frame * size_of_pixel
 					add address, size_of_pixel * 8d
 
@@ -394,12 +393,12 @@ new_line			EQU 160d
 size_of_pixel		EQU 2
 get_remainder		EQU 15d
 
-MODE_0				EQU 0
-MODE_1				EQU 1
-MODE_2				EQU 2
-MODE_3				EQU 3
+FRAME_OFF			EQU 0
+SAVE_AND_SHOW		EQU 1
+UPDATE_AND_SHOW		EQU 2
+RESTORE				EQU 3
 
-Hot_Key 			EQU 215d		; F11 (87d-215d)
+Hot_Key 			EQU 215d									; F11 (87d - 215d)
 length_of_frame		EQU 11d
 height_of_frame		EQU 14d
 number_of_registers	EQU 12d

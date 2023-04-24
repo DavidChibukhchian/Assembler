@@ -11,8 +11,8 @@
 ; Destroys:         SI
 ; Exit:             None
 ;-----------------------------------------------------------
-new_line            EQU 160d
-next_3_symbols      EQU 3d
+size_of_pixel       EQU 2
+next_3_symbols      EQU 3
 
 DrawFrame           proc
                     cld
@@ -24,7 +24,11 @@ DrawFrame           proc
                     call DrawLine
 
                     sub dh, 2
-                    call Increase_BX
+                    ;call Increase_BX
+                    add bx, length_of_frame * size_of_pixel
+
+
+
                     add si, next_3_symbols                      ; sets next 3 symbols for drawing
                     pop ax
 
@@ -32,7 +36,9 @@ DrawFrame           proc
                     je @@Exit
                     call DrawLine
 
-                    call Increase_BX
+                    ;call Increase_BX
+                    add bx, length_of_frame * size_of_pixel
+                    
                     dec dh
                     jmp @@Next_Line
 
@@ -62,8 +68,6 @@ DrawFrame           proc
 ; Destroys:         None
 ; Exit:             None
 ;-----------------------------------------------------------
-size_of_pixel       EQU 2d
-
 DrawLine            proc
                     push ax bx cx di
 
