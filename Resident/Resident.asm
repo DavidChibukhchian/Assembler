@@ -166,7 +166,7 @@ New_09_Int			proc
 include RLib.asm
 
 Program_End:
-end					Start
+end				Start
 
 
 
@@ -174,9 +174,9 @@ end					Start
 
 
 
----------------------------------------------------------------------------------------------------------> Time
+-------------------------------------------------------------------------------------------------------------------------------> Time
 
        off             off             on             on             on             off             off             off
 	-               -          Save_Image    Update_Image   Update_Image    Restore_Image        -               -
-			 					   Show_Frame     Show_Frame	 Show_Frame									   
+			 					 Show_Frame      Show_Frame	 Show_Frame									   
 Mode:	0               0              1              2              2               3               0               0
