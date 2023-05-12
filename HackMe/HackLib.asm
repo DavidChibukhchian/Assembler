@@ -1,108 +1,92 @@
 ;-----------------------------------------------------------
 ; Draws a frame on the screen
 ;-----------------------------------------------------------
-; Entry:			BX = video segment coordinates
-;					CH = color attributes of frame symbol
-;					CL = color attributes of space symbol		
-;					DH = height
-;					DL = width
-; Expects:			ES -> video segment
-; Destroys:			AX
-; Exit:				None
+; Entry:            AH = color of frame symbol
+;                   AL = color of space symbol
+;                   BX = video segment coordinates
+;                   DH = height of frame
+;                   DL = width  of frame
+;                   SI = offset of array of drawing symbols
+; Expects:          ES -> video segment
+; Destroys:         SI
+; Exit:             None
 ;-----------------------------------------------------------
-new_line 			EQU 160d
+DrawFrame           proc
+                    cld
+                    push bx dx
 
-DrawFrame			proc
-					push dx bx cx
+                    push ax
+                    mov al, ah                                  ; sets color for space symbol for the first line
+                    call DrawLine
 
-					mov ah, 0C9h
-					mov al, 0CDh
-					mov cl, ch
-					call DrawLine
-					pop cx
+                    sub dh, 2
+                    add bx, new_line
+                    add si, next_3_symbols                      ; sets next 3 symbols for drawing
+                    pop ax
 
-					push bx dx
-					xor dh, dh
-					add bx, dx
-					add bx, dx
-					sub bx, 2
-					mov byte ptr es:[bx], 0BBh
-					pop dx bx
+@@Next_Line:        cmp dh, 0
+                    je @@Normal_Exit
+                    call DrawLine
 
-					add bx, new_line
-					dec dh 		
+                    add bx, new_line
+                    dec dh
+                    jmp @@Next_Line
 
-					mov ah, 0BAh
-					mov al, ' '
-		
-@@Next_Line:		cmp dh, 1
-					je @@Exit
 
-					call DrawLine
-					add bx, new_line
-					dec dh
-					jmp @@Next_Line
+@@Normal_Exit:      push ax
+                    add si, next_3_symbols
+                    mov al, ah                                  ; sets color for space symbol for the last line
+                    call DrawLine
+                    pop ax
 
-@@Exit:				push cx
-					mov cl, ch
-					mov ah, 0C8h
-					mov al, 0CDh
-					call DrawLine
-					pop cx
-					
-					xor dh, dh
-					add bx, dx
-					add bx, dx
-					sub bx, 2
-					mov byte ptr es:[bx], 0BCh
-
-					pop bx dx
-					ret
-					endp
+@@Exit:             pop dx bx
+                    ret
+                    endp
 ;-----------------------------------------------------------
+
 
 
 
 ;-----------------------------------------------------------
 ; Draws a line on the screen
 ;-----------------------------------------------------------
-; Entry:			AH = frame symbol
-;					AL = space symbol
-;					BX = video segment coordinates
-;					CH = color of the frame symbol
-;					CL = color of the space symbol
-;					DL = width
-; Expects:			ES -> video segment
-; Destroys:			None
-; Exit:				None	
+; Entry:            AH = color of the 1st and the 3rd symbol
+;                   AL = color of the 2nd symbol
+;                   BX = video segment coordinates
+;                   DL = width
+;                   SI = offset of array of three symbols
+; Expects:          ES -> video segment
+; Destroys:         None
+; Exit:             None
 ;-----------------------------------------------------------
-size_of_pixel 		EQU 2
+size_of_pixel       EQU 2d
 
-DrawLine			proc
-					push bx dx
+DrawLine            proc
+                    push ax bx cx di
 
-					sub dl, size_of_pixel
+                    xor cx, cx
+                    mov cl, dl
+                    mov di, bx
+                    mov bx, ax
 
-					mov byte ptr es:[bx],   ah
-					mov byte ptr es:[bx+1], ch
+                    mov al, [si]                                ; sets the 1st symbol of line
+                    mov ah, bh
+                    stosw
 
-@@Next_Symbol:		cmp dl, 0
-					je @@Exit
+                    sub cx, 2
+                    mov al, [si+1]                              ; sets the 2nd symbol of line
+                    mov ah, bl
+                    rep stosw
 
-					add bx, size_of_pixel
-					mov byte ptr es:[bx],   al
-					mov byte ptr es:[bx+1], cl
-					dec dl
-					jmp @@Next_Symbol
-		
-@@Exit:				add bx, size_of_pixel
-					mov byte ptr es:[bx],   ah
-					mov byte ptr es:[bx+1], ch
+                    mov al, [si+2]                              ; sets the 3rd symbol of line
+                    mov ah, bh
+                    stosw
 
-					pop dx bx
-					ret
-					endp
+                    pop di cx bx ax
+                    ret
+                    endp
 ;-----------------------------------------------------------
+
 
 
 
@@ -138,6 +122,7 @@ PrintString			proc
 
 
 
+
 ;-----------------------------------------------------------
 ; Draws "HACK ME" in the frame
 ;-----------------------------------------------------------
@@ -147,9 +132,19 @@ PrintString			proc
 ; Destroys:			BX
 ; Exit:				None
 ;-----------------------------------------------------------
+
+
+
+
+put_symbol          macro  offs
+                    mov es:[bx+2*offs],  ax
+                    endm
+
+
+
 Print_HACK_ME		proc
 
-                    mov bx, 160* 3d + 2d
+                    mov bx, top_left_corner + new_line * 2
                     mov es:[bx+2*3],  ax
                     mov es:[bx+2*6],  ax
                     mov es:[bx+2*9],  ax
@@ -167,7 +162,7 @@ Print_HACK_ME		proc
                     mov es:[bx+2*33], ax
                     mov es:[bx+2*34], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*3],  ax
                     mov es:[bx+2*6],  ax
                     mov es:[bx+2*8],  ax
@@ -181,7 +176,7 @@ Print_HACK_ME		proc
                     mov es:[bx+2*29], ax
                     mov es:[bx+2*31], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*3],  ax
                     mov es:[bx+2*4],  ax
                     mov es:[bx+2*5],  ax
@@ -201,7 +196,7 @@ Print_HACK_ME		proc
                     mov es:[bx+2*33], ax
                     mov es:[bx+2*34], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*3],  ax
                     mov es:[bx+2*6],  ax
                     mov es:[bx+2*8],  ax
@@ -213,7 +208,7 @@ Print_HACK_ME		proc
                     mov es:[bx+2*29], ax
                     mov es:[bx+2*31], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*3],  ax
                     mov es:[bx+2*6],  ax
                     mov es:[bx+2*8],  ax
@@ -250,11 +245,12 @@ Print_ACCESS_GRANTED proc
 
 					push ax
 
-					mov bx, 160d + 2d
-                    mov ch, 5Ch
-                    mov cl, 27h
-                    mov dh, 13
-                    mov dl, 38
+                    mov bx, top_left_corner
+                    mov ah, color_of_frame
+                    mov al, color_of_space_granted
+                    mov dh, height_of_frame
+                    mov dl, width_of_frame
+                    mov si, offset frame_symbols
                     call DrawFrame
 
                     mov si, offset AccessGranted
@@ -263,7 +259,7 @@ Print_ACCESS_GRANTED proc
                     call PrintString
 
 					pop ax
-                    mov bx, 160*6d
+                    mov bx, new_line * 6d
 
                     mov es:[bx+2*7],  ax
                     mov es:[bx+2*11], ax
@@ -283,7 +279,7 @@ Print_ACCESS_GRANTED proc
                     mov es:[bx+2*30], ax
                     mov es:[bx+2*32], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*8],  ax
                     mov es:[bx+2*9],  ax
                     mov es:[bx+2*10], ax
@@ -297,7 +293,7 @@ Print_ACCESS_GRANTED proc
                     mov es:[bx+2*30], ax
                     mov es:[bx+2*32], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*9],  ax
                     mov es:[bx+2*13], ax
                     mov es:[bx+2*16], ax
@@ -311,7 +307,7 @@ Print_ACCESS_GRANTED proc
                     mov es:[bx+2*30], ax
                     mov es:[bx+2*32], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*8],  ax
                     mov es:[bx+2*9],  ax
                     mov es:[bx+2*10], ax
@@ -324,7 +320,7 @@ Print_ACCESS_GRANTED proc
                     mov es:[bx+2*30], ax
                     mov es:[bx+2*32], ax
 
-                    add bx, 160d
+                    add bx, new_line
                     mov es:[bx+2*7],  ax
                     mov es:[bx+2*11], ax
                     mov es:[bx+2*13], ax
@@ -361,11 +357,12 @@ Print_ACCESS_DENIED	proc
 
 					push ax
 
-					mov bx, 160d + 2d
-                    mov ch, 5Ch
-                    mov cl, 47h
-                    mov dh, 13
-                    mov dl, 38
+                    mov bx, top_left_corner
+                    mov ah, color_of_frame
+                    mov al, color_of_space_denied
+                    mov dh, height_of_frame
+                    mov dl, width_of_frame
+                    mov si, offset frame_symbols
                     call DrawFrame
 
                     mov si, offset AccessDenied
@@ -374,80 +371,80 @@ Print_ACCESS_DENIED	proc
                     call PrintString
 
                     pop ax
-					mov bx, 160*6d
+                    mov bx, new_line * 6d
 
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*24], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*31], ax
+                    put_symbol 8d
+                    put_symbol 13d
+                    put_symbol 14d
+                    put_symbol 15d
+                    put_symbol 16d
+                    put_symbol 18d
+                    put_symbol 19d
+                    put_symbol 20d
+                    put_symbol 21d
+                    put_symbol 23d
+                    put_symbol 24d
+                    put_symbol 25d
+                    put_symbol 26d
+                    put_symbol 28d
+                    put_symbol 29d
+                    put_symbol 30d
+                    put_symbol 31d
 
-                    add bx, 160d
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*31], ax
+                    add bx, new_line
+                    put_symbol 8d
+                    put_symbol 13d
+                    put_symbol 16d
+                    put_symbol 18d
+                    put_symbol 23d
+                    put_symbol 28d
+                    put_symbol 31d
 
-                    add bx, 160d
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*24], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*31], ax
+                    add bx, new_line
+                    put_symbol 8d
+                    put_symbol 13d
+                    put_symbol 16d
+                    put_symbol 18d
+                    put_symbol 19d
+                    put_symbol 20d
+                    put_symbol 21d
+                    put_symbol 23d
+                    put_symbol 24d
+                    put_symbol 25d
+                    put_symbol 26d
+                    put_symbol 28d
+                    put_symbol 29d
+                    put_symbol 30d
+                    put_symbol 31d
 
-                    add bx, 160d
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*30], ax
+                    add bx, new_line
+                    put_symbol 8d
+                    put_symbol 13d
+                    put_symbol 16d
+                    put_symbol 21d
+                    put_symbol 23d
+                    put_symbol 28d
+                    put_symbol 30d
 
-                    add bx, 160d
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*10], ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*24], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*31], ax
+                    add bx, new_line
+                    put_symbol 8d
+                    put_symbol 9d
+                    put_symbol 10d
+                    put_symbol 11d
+                    put_symbol 13d
+                    put_symbol 14d
+                    put_symbol 15d
+                    put_symbol 16d
+                    put_symbol 18d
+                    put_symbol 19d
+                    put_symbol 20d
+                    put_symbol 21d
+                    put_symbol 23d
+                    put_symbol 24d
+                    put_symbol 25d
+                    put_symbol 26d
+                    put_symbol 28d
+                    put_symbol 31d
 
 					ret
 					endp
