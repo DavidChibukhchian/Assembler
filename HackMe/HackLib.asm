@@ -159,18 +159,18 @@ Draw_ACCESS_GRANTED proc
                     mov dh, height_of_frame
                     mov dl, width_of_frame
                     lea si, frame_symbols
-                    call Draw_Frame
+                    call Draw_Frame                             ; draws a frame with a different color of space
 
                     lea si, Access_Granted_phrase
                     mov bx, coordinates_of_result_phrase
                     mov ah, color_of_result_phrase_Granted
-                    call Print_String
+                    call Print_String                           ; prints "ACCESS GRANTED" phrase in the frame
 
                     mov bx, coordinates_of_result_picture
                     mov ah, color_of_result_picture
                     mov al, symbol_of_result_picture
                     lea si, Granted_coords
-                    call Draw_Picture
+                    call Draw_Picture                           ; draws "ХОРОШ" in the frame
 
                     ret
                     endp
@@ -195,18 +195,18 @@ Draw_ACCESS_DENIED  proc
                     mov dh, height_of_frame
                     mov dl, width_of_frame
                     lea si, frame_symbols
-                    call Draw_Frame
+                    call Draw_Frame                             ; draws a frame with a different color of space
 
                     lea si, Access_Denied_phrase
                     mov bx, coordinates_of_result_phrase
                     mov ah, color_of_result_phrase_Denied
-                    call Print_String
+                    call Print_String                           ; prints "ACCESS DENIED" phrase in the frame
 
                     mov bx, coordinates_of_result_picture
                     mov ah, color_of_result_picture
                     mov al, symbol_of_result_picture
                     lea si, Denied_coords
-                    call Draw_Picture
+                    call Draw_Picture                           ; draws "LOSER" in the frame
 
                     ret
                     endp
