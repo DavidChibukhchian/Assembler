@@ -121,29 +121,6 @@ Print_String	    proc
 
 
 ;-----------------------------------------------------------
-; Draws the main picture in the frame
-;-----------------------------------------------------------
-; Entry:            None
-; Expects:          ES -> video segment
-; Destroys:         BX, CX, DL, SI, DI
-; Exit:             None
-;-----------------------------------------------------------
-Draw_Main_Picture   proc
-
-                    mov bx, coordinates_of_main_picture
-                    mov ah, color_of_main_picture
-                    mov al, symbol_of_main_picture
-                    lea si, main_picture_coords
-                    call Draw_Picture
-
-                    ret
-                    endp
-;-----------------------------------------------------------
-
-
-
-
-;-----------------------------------------------------------
 ; Draws a picture in case of right password
 ;-----------------------------------------------------------
 ; Entry:            None
@@ -153,7 +130,7 @@ Draw_Main_Picture   proc
 ;-----------------------------------------------------------
 Draw_ACCESS_GRANTED proc
 
-                    mov bx, top_left_corner
+                    mov bx, top_left_corner_of_frame
                     mov ah, color_of_frame
                     mov al, color_of_space_Granted
                     mov dh, height_of_frame
@@ -189,7 +166,7 @@ Draw_ACCESS_GRANTED proc
 ;-----------------------------------------------------------
 Draw_ACCESS_DENIED  proc
 
-                    mov bx, top_left_corner
+                    mov bx, top_left_corner_of_frame
                     mov ah, color_of_frame
                     mov al, color_of_space_Denied
                     mov dh, height_of_frame
