@@ -36,15 +36,15 @@ Display_Menu        proc
                     lea si, frame_symbols
                     call Draw_Frame
 
-                    call Draw_Main_Picture
+                    call Draw_Main_Picture                      ; draws "HACK ME" in the frame
 
                     mov bx, enter_the_password_coordinates
-                    lea si, enter_the_password_phrase
+                    lea si, enter_the_password_phrase           ; prints "ENTER THE PASSWORD" in the frame
                     mov ah, color_of_enter_the_password_phrase
                     call Print_String
 
                     mov bx, password_field_coordinates
-                    lea si, password_field
+                    lea si, password_field                      ; prints a password field in the frame
                     mov ah, color_of_password_field
                     call Print_String
 
@@ -219,36 +219,42 @@ right_password              db 'password', 4 DUP(0)
 
 ;-----------------------------------------------------------
 
-new_line                EQU 160d
-size_of_pixel           EQU 2d
-next_3_symbols          EQU 3d
-ENTER_code              EQU 0Dh
-BACKSPACE_code          EQU 08h
+new_line                    EQU 160d
+size_of_pixel               EQU 2d
+next_3_symbols              EQU 3d
+ENTER_code                  EQU 0Dh
+BACKSPACE_code              EQU 08h
 
-top_left_corner         EQU 162d
-color_of_frame          EQU 5Ch
-color_of_space          EQU 5Ch
-color_of_space_Granted  EQU 27h
-color_of_space_Denied   EQU 47h
-height_of_frame         EQU 13d
-width_of_frame          EQU 38d
+top_left_corner             EQU new_line + 2d
+color_of_frame              EQU 5Ch
+color_of_space              EQU 5Ch
+color_of_space_Granted      EQU 27h
+color_of_space_Denied       EQU 47h
+height_of_frame             EQU 13d
+width_of_frame              EQU 38d
 
+height_of_pictures                  EQU 5d
+
+coordinates_of_main_picture         EQU new_line*3d + 2*2d
 color_of_main_picture               EQU 3Ch
 symbol_of_main_picture              EQU ' '
 
-enter_the_password_coordinates      EQU 160*9d + 2*10d
+enter_the_password_coordinates      EQU new_line*9d + 2*10d
 color_of_enter_the_password_phrase  EQU 4Ah
 
-password_field_coordinates          EQU 160*11d + 2*14d
+password_field_coordinates          EQU new_line*11d + 2*14d
 color_of_password_field             EQU 3Ch
 
 color_of_blinking_underscore        EQU 0BAh
 color_of_star                       EQU 3Ah
 
+coordinates_of_result_phrase        EQU new_line*4d + 2*13d
+color_of_result_phrase_Granted      EQU 3Ah
+color_of_result_phrase_Denied       EQU 3Ch
+
+coordinates_of_result_picture       EQU new_line*6d + 2*2d
 color_of_result_picture             EQU 93h
 symbol_of_result_picture            EQU 0B1h
-
-height_of_pictures                  EQU 5d
 
 ;-----------------------------------------------------------
 

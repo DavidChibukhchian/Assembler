@@ -130,7 +130,7 @@ Print_String	    proc
 ;-----------------------------------------------------------
 Draw_Main_Picture   proc
 
-                    mov bx, new_line * 3d + 2*2d
+                    mov bx, coordinates_of_main_picture
                     mov ah, color_of_main_picture
                     mov al, symbol_of_main_picture
                     lea si, main_picture_coords
@@ -162,13 +162,13 @@ Draw_ACCESS_GRANTED proc
                     call Draw_Frame
 
                     lea si, Access_Granted_phrase
-                    mov bx, 160*4d + 2*13d
-                    mov ah, 3Ah
+                    mov bx, coordinates_of_result_phrase
+                    mov ah, color_of_result_phrase_Granted
                     call Print_String
 
-                    mov bx, new_line * 6d + 2*2d
-                    mov ah, color_of_big_result_phrase
-                    mov al, symbol_of_big_result_phrase
+                    mov bx, coordinates_of_result_picture
+                    mov ah, color_of_result_picture
+                    mov al, symbol_of_result_picture
                     lea si, Granted_coords
                     call Draw_Picture
 
@@ -198,13 +198,13 @@ Draw_ACCESS_DENIED  proc
                     call Draw_Frame
 
                     lea si, Access_Denied_phrase
-                    mov bx, 160*4d + 2*13d
-                    mov ah, 3Ch
+                    mov bx, coordinates_of_result_phrase
+                    mov ah, color_of_result_phrase_Denied
                     call Print_String
 
-                    mov bx, new_line * 6d + 2*2d
-                    mov ah, color_of_big_result_phrase
-                    mov al, symbol_of_big_result_phrase
+                    mov bx, coordinates_of_result_picture
+                    mov ah, color_of_result_picture
+                    mov al, symbol_of_result_picture
                     lea si, Denied_coords
                     call Draw_Picture
 
