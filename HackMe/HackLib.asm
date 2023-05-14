@@ -6,40 +6,40 @@
 ;                   BX = video segment coordinates
 ;                   DH = height of frame
 ;                   DL = width  of frame
-;                   SI = offset of array of drawing symbols
+;                   SI = offset of array of 9 drawing symbols
 ; Expects:          ES -> video segment
 ; Destroys:         SI
 ; Exit:             None
 ;-----------------------------------------------------------
-DrawFrame           proc
+Draw_Frame          proc
                     cld
                     push bx dx
 
                     push ax
                     mov al, ah                                  ; sets color for space symbol for the first line
-                    call DrawLine
+                    call Draw_Line
 
-                    sub dh, 2
+                    sub dh, 2d
                     add bx, new_line
                     add si, next_3_symbols                      ; sets next 3 symbols for drawing
                     pop ax
 
 @@Next_Line:        cmp dh, 0
-                    je @@Normal_Exit
-                    call DrawLine
+                    je @@Exit
+
+                    call Draw_Line
 
                     add bx, new_line
                     dec dh
                     jmp @@Next_Line
 
-
-@@Normal_Exit:      push ax
+@@Exit:             push ax
                     add si, next_3_symbols
                     mov al, ah                                  ; sets color for space symbol for the last line
-                    call DrawLine
+                    call Draw_Line
                     pop ax
 
-@@Exit:             pop dx bx
+                    pop dx bx
                     ret
                     endp
 ;-----------------------------------------------------------
@@ -54,26 +54,24 @@ DrawFrame           proc
 ;                   AL = color of the 2nd symbol
 ;                   BX = video segment coordinates
 ;                   DL = width
-;                   SI = offset of array of three symbols
+;                   SI = offset of array of 3 drawing symbols
 ; Expects:          ES -> video segment
 ; Destroys:         None
 ; Exit:             None
 ;-----------------------------------------------------------
-size_of_pixel       EQU 2d
-
-DrawLine            proc
+Draw_Line           proc
                     push ax bx cx di
 
                     xor cx, cx
                     mov cl, dl
-                    mov di, bx
+                    mov di, bx                                  ; puts coordinates in DI because of STOSW
                     mov bx, ax
 
                     mov al, [si]                                ; sets the 1st symbol of line
                     mov ah, bh
                     stosw
 
-                    sub cx, 2
+                    sub cx, 2d
                     mov al, [si+1]                              ; sets the 2nd symbol of line
                     mov ah, bl
                     rep stosw
@@ -94,28 +92,27 @@ DrawLine            proc
 ; Prints a string on the screen
 ;-----------------------------------------------------------
 ; Entry: 			BX = video segment coordinates
-;					CH = color
+;					AH = color of symbols
 ;					SI = address of string
 ; Expects:			ES -> video segment
-; Destroys:			CL, SI
+; Destroys:			AL, SI
 ; Exit:				None
 ;-----------------------------------------------------------
-PrintString			proc
+Print_String	    proc
+                    cld
+					push di
 
-					push bx
+                    mov di, bx
 
-@@Next:				mov cl, [si]
-					cmp cl, 0
+@@Next_Symbol:		mov al, [si]
+					cmp al, 0
 					je @@Exit
 
-					mov byte ptr es:[bx],   cl
-					mov byte ptr es:[bx+1], ch
+                    stosw
+                    inc si
+					jmp @@Next_Symbol
 
-					add bx, 2
-					inc si
-					jmp @@Next
-
-@@Exit:	 			pop bx
+@@Exit:	 			pop di
 					ret
 					endp				
 ;-----------------------------------------------------------
@@ -124,333 +121,166 @@ PrintString			proc
 
 
 ;-----------------------------------------------------------
-; Draws "HACK ME" in the frame
+; Draws the main picture in the frame
 ;-----------------------------------------------------------
-; Entry:			AH = color 
-;					AL = symbol
-; Expects:			ES -> video segment
-; Destroys:			BX
-; Exit:				None
+; Entry:            None
+; Expects:          ES -> video segment
+; Destroys:         BX, CX, DL, SI, DI
+; Exit:             None
+;-----------------------------------------------------------
+Draw_Main_Picture   proc
+
+                    mov bx, new_line * 3d + 2*2d
+                    mov ah, color_of_main_picture
+                    mov al, symbol_of_main_picture
+                    lea si, main_picture_coords
+                    call Draw_Picture
+
+                    ret
+                    endp
 ;-----------------------------------------------------------
 
-
-
-
-put_symbol          macro  offs
-                    mov es:[bx+2*offs],  ax
-                    endm
-
-
-
-Print_HACK_ME		proc
-
-                    mov bx, top_left_corner + new_line * 2
-                    mov es:[bx+2*3],  ax
-                    mov es:[bx+2*6],  ax
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*10], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*31], ax
-                    mov es:[bx+2*32], ax
-                    mov es:[bx+2*33], ax
-                    mov es:[bx+2*34], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*3],  ax
-                    mov es:[bx+2*6],  ax
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*31], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*3],  ax
-                    mov es:[bx+2*4],  ax
-                    mov es:[bx+2*5],  ax
-                    mov es:[bx+2*6],  ax
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*10], ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*27], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*31], ax
-                    mov es:[bx+2*32], ax
-                    mov es:[bx+2*33], ax
-                    mov es:[bx+2*34], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*3],  ax
-                    mov es:[bx+2*6],  ax
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*31], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*3],  ax
-                    mov es:[bx+2*6],  ax
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*31], ax
-                    mov es:[bx+2*32], ax
-                    mov es:[bx+2*33], ax
-                    mov es:[bx+2*34], ax
-
-					ret
-					endp
-;-----------------------------------------------------------
 
 
 
 ;-----------------------------------------------------------
 ; Draws a picture in case of right password
 ;-----------------------------------------------------------
-; Entry:			AH = color 
-;					AL = symbol
-; Expects:			ES -> video segment
-; Destroys:			BX, CX, SI
-; Exit:				None
+; Entry:            None
+; Expects:          ES -> video segment
+; Destroys:         AX, BX, CX, DX, SI, DI
+; Exit:             None
 ;-----------------------------------------------------------
-Print_ACCESS_GRANTED proc
-
-					push ax
+Draw_ACCESS_GRANTED proc
 
                     mov bx, top_left_corner
                     mov ah, color_of_frame
-                    mov al, color_of_space_granted
+                    mov al, color_of_space_Granted
                     mov dh, height_of_frame
                     mov dl, width_of_frame
-                    mov si, offset frame_symbols
-                    call DrawFrame
+                    lea si, frame_symbols
+                    call Draw_Frame
 
-                    mov si, offset AccessGranted
+                    lea si, Access_Granted_phrase
                     mov bx, 160*4d + 2*13d
-                    mov ch, 3Ah
-                    call PrintString
+                    mov ah, 3Ah
+                    call Print_String
 
-					pop ax
-                    mov bx, new_line * 6d
+                    mov bx, new_line * 6d + 2*2d
+                    mov ah, color_of_big_result_phrase
+                    mov al, symbol_of_big_result_phrase
+                    lea si, Granted_coords
+                    call Draw_Picture
 
-                    mov es:[bx+2*7],  ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*24], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*32], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*10], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*32], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*19], ax
-                    mov es:[bx+2*20], ax
-                    mov es:[bx+2*21], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*32], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*8],  ax
-                    mov es:[bx+2*9],  ax
-                    mov es:[bx+2*10], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*32], ax
-
-                    add bx, new_line
-                    mov es:[bx+2*7],  ax
-                    mov es:[bx+2*11], ax
-                    mov es:[bx+2*13], ax
-                    mov es:[bx+2*14], ax
-                    mov es:[bx+2*15], ax
-                    mov es:[bx+2*16], ax
-                    mov es:[bx+2*18], ax
-                    mov es:[bx+2*23], ax
-                    mov es:[bx+2*24], ax
-                    mov es:[bx+2*25], ax
-                    mov es:[bx+2*26], ax
-                    mov es:[bx+2*28], ax
-                    mov es:[bx+2*29], ax
-                    mov es:[bx+2*30], ax
-                    mov es:[bx+2*31], ax
-                    mov es:[bx+2*32], ax
-
-					ret
-					endp
+                    ret
+                    endp
 ;-----------------------------------------------------------
+
 
 
 
 ;-----------------------------------------------------------
 ; Draws a picture in case of wrong password
 ;-----------------------------------------------------------
-; Entry:			AH = color
-;					AL = symbol
-; Expects:			ES -> video segment
-; Destroys:			AX, BX, CX, DX, ES, SI, DI
-; Exit:				None
+; Entry:            None
+; Expects:          ES -> video segment
+; Destroys:         AX, BX, CX, DX, SI, DI
+; Exit:             None
 ;-----------------------------------------------------------
-Print_ACCESS_DENIED	proc
-
-					push ax
+Draw_ACCESS_DENIED  proc
 
                     mov bx, top_left_corner
                     mov ah, color_of_frame
-                    mov al, color_of_space_denied
+                    mov al, color_of_space_Denied
                     mov dh, height_of_frame
                     mov dl, width_of_frame
-                    mov si, offset frame_symbols
-                    call DrawFrame
+                    lea si, frame_symbols
+                    call Draw_Frame
 
-                    mov si, offset AccessDenied
+                    lea si, Access_Denied_phrase
                     mov bx, 160*4d + 2*13d
-                    mov ch, 3Ch
-                    call PrintString
+                    mov ah, 3Ch
+                    call Print_String
 
-                    pop ax
-                    mov bx, new_line * 6d
+                    mov bx, new_line * 6d + 2*2d
+                    mov ah, color_of_big_result_phrase
+                    mov al, symbol_of_big_result_phrase
+                    lea si, Denied_coords
+                    call Draw_Picture
 
-                    put_symbol 8d
-                    put_symbol 13d
-                    put_symbol 14d
-                    put_symbol 15d
-                    put_symbol 16d
-                    put_symbol 18d
-                    put_symbol 19d
-                    put_symbol 20d
-                    put_symbol 21d
-                    put_symbol 23d
-                    put_symbol 24d
-                    put_symbol 25d
-                    put_symbol 26d
-                    put_symbol 28d
-                    put_symbol 29d
-                    put_symbol 30d
-                    put_symbol 31d
-
-                    add bx, new_line
-                    put_symbol 8d
-                    put_symbol 13d
-                    put_symbol 16d
-                    put_symbol 18d
-                    put_symbol 23d
-                    put_symbol 28d
-                    put_symbol 31d
-
-                    add bx, new_line
-                    put_symbol 8d
-                    put_symbol 13d
-                    put_symbol 16d
-                    put_symbol 18d
-                    put_symbol 19d
-                    put_symbol 20d
-                    put_symbol 21d
-                    put_symbol 23d
-                    put_symbol 24d
-                    put_symbol 25d
-                    put_symbol 26d
-                    put_symbol 28d
-                    put_symbol 29d
-                    put_symbol 30d
-                    put_symbol 31d
-
-                    add bx, new_line
-                    put_symbol 8d
-                    put_symbol 13d
-                    put_symbol 16d
-                    put_symbol 21d
-                    put_symbol 23d
-                    put_symbol 28d
-                    put_symbol 30d
-
-                    add bx, new_line
-                    put_symbol 8d
-                    put_symbol 9d
-                    put_symbol 10d
-                    put_symbol 11d
-                    put_symbol 13d
-                    put_symbol 14d
-                    put_symbol 15d
-                    put_symbol 16d
-                    put_symbol 18d
-                    put_symbol 19d
-                    put_symbol 20d
-                    put_symbol 21d
-                    put_symbol 23d
-                    put_symbol 24d
-                    put_symbol 25d
-                    put_symbol 26d
-                    put_symbol 28d
-                    put_symbol 31d
-
-					ret
-					endp
+                    ret
+                    endp
 ;-----------------------------------------------------------
 
-AccessGranted       db 'ACCESS GRANTED', 0
-AccessDenied        db 'ACCESS  DENIED', 0
+
+
+
+;-----------------------------------------------------------
+; Draws a picture on the screen
+;-----------------------------------------------------------
+; Entry:            BX = coordinates of the top left
+;                        corner of a picture
+;                   AH = color of symbol for drawing
+;                   AL = symbol for drawing
+;                   SI = offset of coordinates for drawing
+; Expects:          ES -> video segment
+; Destroys:         BX, CX, DL, SI, DI
+; Exit:             None
+;-----------------------------------------------------------
+Draw_Picture        proc
+                    cld
+
+                    mov cx, height_of_pictures
+
+@@Next_Line:        mov di, bx
+                    xor dl, dl                                  ; a cooridnate of a symbol in the line will be in DL
+
+@@Next_Symbol:      cmp dl, [si]                                ; skips if coordinates are not equal
+                    jne @@Skip
+
+                    stosw
+                    sub di, size_of_pixel
+                    inc si
+
+@@Skip:             add di, size_of_pixel
+                    inc dl
+                    cmp dl, width_of_frame - 2d                 ; compares with an internal width of the frame
+                    je @@Go_To_Next_Line
+
+                    jmp @@Next_Symbol
+
+@@Go_To_Next_Line:  add bx, new_line
+                    loop @@Next_Line
+
+                    ret
+                    endp
+;-----------------------------------------------------------
+
+
+
+
+;-----------------------------------------------------------
+
+main_picture_coords db 2d,  5d,  8d,  9d, 12d, 13d, 14d, 15d, 17d, 20d, 24d, 28d, 30d, 31d, 32d, 33d
+                    db 2d,  5d,  7d, 10d, 12d, 17d, 19d, 24d, 25d, 27d, 28d, 30d
+                    db 2d,  3d,  4d,  5d,  7d,  8d,  9d, 10d, 12d, 17d, 18d, 24d, 26d, 28d, 30d, 31d, 32d, 33d
+                    db 2d,  5d,  7d, 10d, 12d, 17d, 19d, 24d, 28d, 30d
+                    db 2d,  5d,  7d, 10d, 12d, 13d, 14d, 15d, 17d, 20d, 24d, 28d, 30d, 31d, 32d, 33d
+
+Granted_coords      db 5d,  9d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 28d, 30d
+                    db 6d,  7d,  8d, 11d, 14d, 16d, 19d, 21d, 24d, 26d, 28d, 30d
+                    db 7d, 11d, 14d, 16d, 17d, 18d, 19d, 21d, 24d, 26d, 28d, 30d
+                    db 6d,  7d,  8d, 11d, 14d, 16d, 21d, 24d, 26d, 28d, 30d
+                    db 5d,  9d, 11d, 12d, 13d, 14d, 16d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d, 30d
+
+Denied_coords       db 6d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d
+                    db 6d, 11d, 14d, 16d, 21d, 26d, 29d
+                    db 6d, 11d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d
+                    db 6d, 11d, 14d, 19d, 21d, 26d, 28d
+                    db 6d,  7d,  8d,  9d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 29d
+
+
+Access_Granted_phrase   db 'ACCESS GRANTED', 0
+Access_Denied_phrase    db 'ACCESS  DENIED', 0
 
 ;-----------------------------------------------------------
