@@ -15,48 +15,48 @@ int main()
     if (!font.loadFromFile("fonts/font.otf"))
         return Failed_To_Load_Font;
 
-	Texture main_texture;
-	if (!main_texture.loadFromFile("images/main_background.jpg"))
+    Texture main_texture;
+    if (!main_texture.loadFromFile("images/main_background.jpg"))
         return Failed_To_Load_Main_Texture;
 
-	Texture patching_texture;
-	if (!patching_texture.loadFromFile("images/patching_background.jpg"))
+    Texture patching_texture;
+    if (!patching_texture.loadFromFile("images/patching_background.jpg"))
         return Failed_To_Load_Patching_Texture;
 
-	Texture about_texture;
-	if (!about_texture.loadFromFile("images/about_background.jpg"))
+    Texture about_texture;
+    if (!about_texture.loadFromFile("images/about_background.jpg"))
         return Failed_To_Load_About_Texture;
 
 
-  Sprite sprite;
-	sprite.setTexture(main_texture);
+    Sprite sprite;
+    sprite.setTexture(main_texture);
 
-	RenderWindow window(sf::VideoMode(WIDTH_OF_WINDOW, HEIGHT_OF_WINDOW), "HackMe Patcher");
-	window.setMouseCursorVisible(false);
+    RenderWindow window(sf::VideoMode(WIDTH_OF_WINDOW, HEIGHT_OF_WINDOW), "HackMe Patcher");
+    window.setMouseCursorVisible(false);
 
-	sf::Text title;
-	init_text(&title, &font, "HACKME PATCHER", 75, sf::Color(237, 147, 0));
-	title.setPosition(WIDTH_OF_WINDOW / 2 - title.getGlobalBounds().width / 2, 10);
+    sf::Text title;
+    init_text(&title, &font, "HACKME PATCHER", 75, sf::Color(237, 147, 0));
+    title.setPosition(WIDTH_OF_WINDOW / 2 - title.getGlobalBounds().width / 2, 10);
 
-	sf::Text menu_button[NUMBER_OF_MENU_BUTTONS];
-  init_menu_buttons(menu_button, &font);
+    sf::Text menu_button[NUMBER_OF_MENU_BUTTONS];
+    init_menu_buttons(menu_button, &font);
 
-  sf::Text about_text;
-  init_text(&about_text, &font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
-  about_text.setPosition(30, 130);
-
-
-  size_t selected_button = 0;
-  bool main_page_is_open  = true;
-  bool about_page_is_open = false;
+    sf::Text about_text;
+    init_text(&about_text, &font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
+    about_text.setPosition(30, 130);
 
 
-	while (window.isOpen())
+    size_t selected_button = 0;
+    bool main_page_is_open  = true;
+    bool about_page_is_open = false;
+
+
+    while (window.isOpen())
+    {
+    	sf::Event event;
+
+	while (window.pollEvent(event))
 	{
-		sf::Event event;
-
-		while (window.pollEvent(event))
-		{
             if (event.type == sf::Event::KeyReleased)
             {
                 if (main_page_is_open)
@@ -110,22 +110,22 @@ int main()
                     about_page_is_open = false;
                 }
             }
-		}
+	}
 
-		window.clear();
-		window.draw(sprite);
+	window.clear();
+	window.draw(sprite);
 
-		if (main_page_is_open)
-		{
+        if (main_page_is_open)
+  	{
             for (size_t i = 0; i < NUMBER_OF_MENU_BUTTONS; i++)
                 window.draw(menu_button[i]);
-		}
-		if (about_page_is_open)
+	}
+        if (about_page_is_open)
             window.draw(about_text);
 
         window.draw(title);
-		window.display();
-	}
-
-	return 0;
+	window.display();
+    }
+	
+    return 0;
 }
