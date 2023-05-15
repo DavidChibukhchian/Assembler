@@ -91,30 +91,30 @@ Draw_Line           proc
 ;-----------------------------------------------------------
 ; Prints a string on the screen
 ;-----------------------------------------------------------
-; Entry: 	    BX = video segment coordinates
-;		    AH = color of symbols
-;		    SI = address of string
-; Expects:	    ES -> video segment
-; Destroys:	    AL, SI
-; Exit:		    None
+; Entry: 			BX = video segment coordinates
+;					AH = color of symbols
+;					SI = address of string
+; Expects:			ES -> video segment
+; Destroys:			AL, SI
+; Exit:				None
 ;-----------------------------------------------------------
 Print_String	    proc
                     cld
-		    push di
+					push di
 
                     mov di, bx
 
-@@Next_Symbol:      mov al, [si]
-		    cmp al, 0
-		    je @@Exit
+@@Next_Symbol:		mov al, [si]
+					cmp al, 0
+					je @@Exit
 
                     stosw
                     inc si
-		    jmp @@Next_Symbol
+					jmp @@Next_Symbol
 
-@@Exit:	 	    pop di
-		    ret
-		    endp				
+@@Exit:	 			pop di
+					ret
+					endp				
 ;-----------------------------------------------------------
 
 
@@ -212,15 +212,15 @@ Draw_Picture        proc
 @@Next_Line:        mov di, bx
                     xor dl, dl                                  ; a cooridnate of a symbol in the line will be in DL
 
-@@Next_Symbol:      cmp dl, [si]                                ; skips if coordinates are not equal
-                    jne @@Skip
+@@Next_Symbol:      cmp byte ptr [si], 0                        ; skips if coordinates are not equal
+                    je @@Skip
 
                     stosw
                     sub di, size_of_pixel
-                    inc si
 
 @@Skip:             add di, size_of_pixel
                     inc dl
+                    inc si
                     cmp dl, width_of_frame - 2d                 ; compares with an internal width of the frame
                     je @@Go_To_Next_Line
 
@@ -238,24 +238,23 @@ Draw_Picture        proc
 
 ;-----------------------------------------------------------
 
-main_picture_coords db 2d,  5d,  8d,  9d, 12d, 13d, 14d, 15d, 17d, 20d, 24d, 28d, 30d, 31d, 32d, 33d
-                    db 2d,  5d,  7d, 10d, 12d, 17d, 19d, 24d, 25d, 27d, 28d, 30d
-                    db 2d,  3d,  4d,  5d,  7d,  8d,  9d, 10d, 12d, 17d, 18d, 24d, 26d, 28d, 30d, 31d, 32d, 33d
-                    db 2d,  5d,  7d, 10d, 12d, 17d, 19d, 24d, 28d, 30d
-                    db 2d,  5d,  7d, 10d, 12d, 13d, 14d, 15d, 17d, 20d, 24d, 28d, 30d, 31d, 32d, 33d
+main_picture_coords     db 0, 0, 8, 0, 0, 8, 0, 0, 8, 8, 0, 0, 8, 8, 8, 8, 0, 8, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 8, 8, 8, 8, 0, 0
+                        db 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 8, 0, 8, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 0, 0, 0, 0, 8, 8, 0, 0, 0, 0, 0, 8, 0, 8, 0, 8, 0, 8, 8, 8, 8, 0, 0
+                        db 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 8, 0, 8, 8, 8, 8, 0, 8, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 8, 0, 8, 8, 8, 8, 0, 0
 
-Granted_coords      db 5d,  9d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 28d, 30d
-                    db 6d,  7d,  8d, 11d, 14d, 16d, 19d, 21d, 24d, 26d, 28d, 30d
-                    db 7d, 11d, 14d, 16d, 17d, 18d, 19d, 21d, 24d, 26d, 28d, 30d
-                    db 6d,  7d,  8d, 11d, 14d, 16d, 21d, 24d, 26d, 28d, 30d
-                    db 5d,  9d, 11d, 12d, 13d, 14d, 16d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d, 30d
+Granted_coords          db 0, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 0, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 8, 8, 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 8, 0, 8, 0, 0, 8, 0, 8, 0, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 8, 0, 8, 8, 8, 8, 0, 8, 0, 0, 8, 0, 8, 0, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 8, 8, 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 0, 8, 0, 8, 0, 8, 0, 8, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 8, 8, 8, 8, 0, 8, 0, 0, 0, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0
 
-Denied_coords       db 6d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d
-                    db 6d, 11d, 14d, 16d, 21d, 26d, 29d
-                    db 6d, 11d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 27d, 28d, 29d
-                    db 6d, 11d, 14d, 19d, 21d, 26d, 28d
-                    db 6d,  7d,  8d,  9d, 11d, 12d, 13d, 14d, 16d, 17d, 18d, 19d, 21d, 22d, 23d, 24d, 26d, 29d
-
+Denied_coords           db 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 0, 0, 0
+                        db 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 8, 8, 8, 0, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0
 
 Access_Granted_phrase   db 'ACCESS GRANTED', 0
 Access_Denied_phrase    db 'ACCESS  DENIED', 0
