@@ -91,30 +91,30 @@ Draw_Line           proc
 ;-----------------------------------------------------------
 ; Prints a string on the screen
 ;-----------------------------------------------------------
-; Entry: 			BX = video segment coordinates
-;					AH = color of symbols
-;					SI = address of string
-; Expects:			ES -> video segment
-; Destroys:			AL, SI
-; Exit:				None
+; Entry: 	    BX = video segment coordinates
+;		    AH = color of symbols
+;		    SI = address of string
+; Expects:	    ES -> video segment
+; Destroys:	    AL, SI
+; Exit:		    None
 ;-----------------------------------------------------------
 Print_String	    proc
                     cld
-					push di
+		    push di
 
                     mov di, bx
 
-@@Next_Symbol:		mov al, [si]
-					cmp al, 0
-					je @@Exit
+@@Next_Symbol:      mov al, [si]
+		    cmp al, 0
+		    je @@Exit
 
                     stosw
                     inc si
-					jmp @@Next_Symbol
+		    jmp @@Next_Symbol
 
-@@Exit:	 			pop di
-					ret
-					endp				
+@@Exit:	 	    pop di
+		    ret
+		    endp				
 ;-----------------------------------------------------------
 
 
