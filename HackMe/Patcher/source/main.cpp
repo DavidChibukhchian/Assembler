@@ -5,24 +5,24 @@ using namespace sf;
 
 int main()
 {
-    sf::Font font;
-    if (!font.loadFromFile("fonts/font.otf"))
-        return Failed_To_Load_Font;
+	sf::Font font;
+	if (!font.loadFromFile("fonts/font.otf"))
+		return Failed_To_Load_Font;
 
 	Texture main_texture;
 	if (!main_texture.loadFromFile("images/main_background.jpg"))
-        return Failed_To_Load_Main_Texture;
+		return Failed_To_Load_Main_Texture;
 
 	Texture patching_texture;
 	if (!patching_texture.loadFromFile("images/patching_background.jpg"))
-        return Failed_To_Load_Patching_Texture;
+		return Failed_To_Load_Patching_Texture;
 
 	Texture about_texture;
 	if (!about_texture.loadFromFile("images/about_background.jpg"))
-        return Failed_To_Load_About_Texture;
+		return Failed_To_Load_About_Texture;
 
 
-    Sprite sprite;
+	Sprite sprite;
 	sprite.setTexture(main_texture);
 
 	RenderWindow window(sf::VideoMode(WIDTH_OF_WINDOW, HEIGHT_OF_WINDOW), "HackMe Patcher");
@@ -33,16 +33,16 @@ int main()
 	title.setPosition(WIDTH_OF_WINDOW / 2 - title.getGlobalBounds().width / 2, 10);
 
 	sf::Text menu_button[NUMBER_OF_MENU_BUTTONS];
-    init_menu_buttons(menu_button, &font);
+	init_menu_buttons(menu_button, &font);
 
-    sf::Text about_text;
-    init_text(&about_text, &font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
-    about_text.setPosition(30, 130);
+	sf::Text about_text;
+	init_text(&about_text, &font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
+	about_text.setPosition(30, 130);
 
 
-    size_t selected_button = 0;
-    bool main_page_is_open  = true;
-    bool about_page_is_open = false;
+	size_t selected_button = 0;
+	bool main_page_is_open  = true;
+	bool about_page_is_open = false;
 
 
 	while (window.isOpen())
@@ -51,60 +51,60 @@ int main()
 
 		while (window.pollEvent(event))
 		{
-            if (event.type == sf::Event::KeyReleased)
-            {
-                if (main_page_is_open)
-                {
-                    if (event.key.code == Keyboard::Up)
-                    {
-                        if (selected_button > 0)
-                        {
-                            selected_button--;
-                            change_color_of_menu_buttons(menu_button, selected_button);
-                        }
-                    }
+			if (event.type == sf::Event::KeyReleased)
+			{
+				if (main_page_is_open)
+				{
+					if (event.key.code == Keyboard::Up)
+					{
+						if (selected_button > 0)
+						{
+							selected_button--;
+							change_color_of_menu_buttons(menu_button, selected_button);
+						}
+					}
 
 
-                    if (event.key.code == Keyboard::Down)
-                    {
-                        if (selected_button < NUMBER_OF_MENU_BUTTONS - 1)
-                        {
-                            selected_button++;
-                            change_color_of_menu_buttons(menu_button, selected_button);
-                        }
-                    }
+					if (event.key.code == Keyboard::Down)
+					{
+						if (selected_button < NUMBER_OF_MENU_BUTTONS - 1)
+						{
+							selected_button++;
+							change_color_of_menu_buttons(menu_button, selected_button);
+						}
+					}
 
 
-                    if ((main_page_is_open) && (event.key.code == Keyboard::Return))
-                    {
-                        switch(selected_button)
-                        {
-                            case START:
-                                patch_program(&window, &patching_texture, &sprite, &title, &font);
-                                window.close();
-                                break;
+					if ((main_page_is_open) && (event.key.code == Keyboard::Return))
+					{
+						switch(selected_button)
+						{
+							case START:
+								patch_program(&window, &patching_texture, &sprite, &title, &font);
+								window.close();
+								break;
 
-                            case ABOUT:
-                                sprite.setTexture(about_texture);
-                                main_page_is_open  = false;
-                                about_page_is_open = true;
-                                break;
+							case ABOUT:
+								sprite.setTexture(about_texture);
+								main_page_is_open  = false;
+								about_page_is_open = true;
+								break;
 
-                            case EXIT:
-                                window.close();
-                                break;
-                        }
-                    }
-                }
+							case EXIT:
+								window.close();
+								break;
+						}
+					}
+				}
 
-                if ((!main_page_is_open) && (event.key.code == Keyboard::Escape))
-                {
-                    sprite.setTexture(main_texture);
-                    main_page_is_open  = true;
-                    about_page_is_open = false;
-                    about_page_is_open = false;
-                }
-            }
+				if ((!main_page_is_open) && (event.key.code == Keyboard::Escape))
+				{
+					sprite.setTexture(main_texture);
+					main_page_is_open  = true;
+					about_page_is_open = false;
+					about_page_is_open = false;
+				}
+			}
 		}
 
 		window.clear();
@@ -112,13 +112,13 @@ int main()
 
 		if (main_page_is_open)
 		{
-            for (size_t i = 0; i < NUMBER_OF_MENU_BUTTONS; i++)
-                window.draw(menu_button[i]);
+			for (size_t i = 0; i < NUMBER_OF_MENU_BUTTONS; i++)
+				window.draw(menu_button[i]);
 		}
 		if (about_page_is_open)
-            window.draw(about_text);
+			window.draw(about_text);
 
-        window.draw(title);
+		window.draw(title);
 		window.display();
 	}
 

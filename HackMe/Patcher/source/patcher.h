@@ -14,9 +14,9 @@
 
 enum patcher_Errors
 {
-    Done_Successfully          = 0,
-    Failed_To_Open_Target_File = -1,
-    Target_File_Is_Empty       = -2
+	Done_Successfully          = 0,
+	Failed_To_Open_Target_File = -1,
+	Target_File_Is_Empty       = -2
 };
 
 

@@ -24,19 +24,19 @@
 
 enum graphics_Errors
 {
-    Failed_To_Load_Music            = 1,
-    Failed_To_Load_Font             = 2,
-    Failed_To_Load_Main_Texture     = 3,
-    Failed_To_Load_Patching_Texture = 4,
-    Failed_To_Load_About_Texture    = 5
+	Failed_To_Load_Music            = 1,
+	Failed_To_Load_Font             = 2,
+	Failed_To_Load_Main_Texture     = 3,
+	Failed_To_Load_Patching_Texture = 4,
+	Failed_To_Load_About_Texture    = 5
 };
 
 
 enum Menu_Buttons
 {
-    START = 0,
-    ABOUT = 1,
-    EXIT  = 2
+	START = 0,
+	ABOUT = 1,
+	EXIT  = 2
 };
 
 
