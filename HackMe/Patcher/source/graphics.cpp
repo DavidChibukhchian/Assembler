@@ -54,7 +54,6 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 	sprite->setTexture(*texture);
 	RESET_WINDOW;
 	window->display();
-
 	pause(PAUSE_TIME);
 
 	sf::Text patching_text;
@@ -66,9 +65,7 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 	window->display();
 
 	int err = patch_hackme();
-	if (err)
-		return;
-
+	if (err) return;
 	pause(2*PAUSE_TIME);
 
 	sf::Text result_text;
