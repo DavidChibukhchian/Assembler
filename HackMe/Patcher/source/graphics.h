@@ -21,16 +21,18 @@
 
 //-----------------------------------------------------------------------------------------------------------
 
-struct Attributes_struct
+struct Attributes
 {
 	sf::Font main_font;
-	
+
 	sf::Texture main_texture;
 	sf::Texture patching_texture;
 	sf::Texture about_texture;
 };
 
-int load_attributes(Attributes_struct* attributes);
+int load_attributes(Attributes* attributes);
+
+void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event, sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open);
 
 enum graphics_Errors
 {

@@ -4,7 +4,7 @@ sf::Color color_of_text = sf::Color(237, 147, 0);
 
 //-----------------------------------------------------------------------------------------------------------
 
-int load_attributes(Attributes_struct* attributes)
+int load_attributes(Attributes* attributes)
 {
 	sf::Font font;
 	if (!font.loadFromFile("fonts/font.otf"))
@@ -28,6 +28,68 @@ int load_attributes(Attributes_struct* attributes)
 
 	return Done_Successfully;
 }
+
+
+void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* attributes, sf::Text* title, int selected_button, int* main_page_is_open, int* about_page_is_open)
+{
+	switch(selected_button)
+	{
+		case START:
+			patch_program(window, &(attributes->patching_texture), sprite, title, &(attributes->main_font));
+			window->close();
+			break;
+
+		case ABOUT:
+			sprite->setTexture(attributes->about_texture);
+			*main_page_is_open  = 0;
+			*about_page_is_open = 1;
+			break;
+
+		case EXIT:
+			window->close();
+			break;
+	}
+}
+
+
+
+void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event, sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open)
+{
+	if (*main_page_is_open)
+	{
+		switch(event.key.code)
+		{
+			case sf::Keyboard::Up:
+				if ((*selected_button) > 0)
+				{
+					(*selected_button)--;
+					change_color_of_menu_buttons(menu_button, *selected_button);
+				}
+				break;
+			
+			case sf::Keyboard::Down:
+				if ((*selected_button) < NUMBER_OF_MENU_BUTTONS - 1)
+				{
+					(*selected_button)++;
+					change_color_of_menu_buttons(menu_button, *selected_button);
+				}
+				break;
+
+			case sf::Keyboard::Return:
+				another_function(window, sprite, attributes, title, *selected_button, main_page_is_open, about_page_is_open);
+				break;
+		}
+	}
+
+	if ((!(*main_page_is_open)) && (event.key.code == sf::Keyboard::Escape))
+	{
+		sprite->setTexture(attributes->main_texture);
+		*main_page_is_open  = 1;
+		*about_page_is_open = 0;
+	}
+}
+
+
 
 
 void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf::Color color)

@@ -7,7 +7,7 @@ int main()
 {
 	int err = 0;
 
-	Attributes_struct attributes = {};
+	Attributes attributes = {};
 
 	err = load_attributes(&attributes);
 	if (err)
@@ -31,10 +31,9 @@ int main()
 	about_text.setPosition(30, 130);
 
 
-	size_t selected_button = 0;
-	bool main_page_is_open  = true;
-	bool about_page_is_open = false;
-
+	int selected_button = 0;
+	int main_page_is_open  = 1;
+	int about_page_is_open = 0;
 
 	while (window.isOpen())
 	{
@@ -44,8 +43,14 @@ int main()
 		{
 			if (event.type == sf::Event::KeyReleased)
 			{
+
+				function(&window, &attributes, &sprite, &title, event, menu_button, &selected_button, &main_page_is_open, &about_page_is_open);
+
+				/*
 				if (main_page_is_open)
 				{
+					//-----------------------------------------------------------------------//
+
 					if (event.key.code == Keyboard::Up)
 					{
 						if (selected_button > 0)
@@ -86,6 +91,8 @@ int main()
 								break;
 						}
 					}
+
+					//-----------------------------------------------------------------------//
 				}
 
 				if ((!main_page_is_open) && (event.key.code == Keyboard::Escape))
@@ -93,8 +100,7 @@ int main()
 					sprite.setTexture(attributes.main_texture);
 					main_page_is_open  = true;
 					about_page_is_open = false;
-					about_page_is_open = false;
-				}
+				} */
 			}
 		}
 
