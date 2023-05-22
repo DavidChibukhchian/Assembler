@@ -21,6 +21,16 @@
 
 //-----------------------------------------------------------------------------------------------------------
 
+struct Attributes_struct
+{
+	sf::Font main_font;
+	
+	sf::Texture main_texture;
+	sf::Texture patching_texture;
+	sf::Texture about_texture;
+};
+
+int load_attributes(Attributes_struct* attributes);
 
 enum graphics_Errors
 {

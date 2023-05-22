@@ -5,38 +5,29 @@ using namespace sf;
 
 int main()
 {
-	sf::Font font;
-	if (!font.loadFromFile("fonts/font.otf"))
-		return Failed_To_Load_Font;
+	int err = 0;
 
-	Texture main_texture;
-	if (!main_texture.loadFromFile("images/main_background.jpg"))
-		return Failed_To_Load_Main_Texture;
+	Attributes_struct attributes = {};
 
-	Texture patching_texture;
-	if (!patching_texture.loadFromFile("images/patching_background.jpg"))
-		return Failed_To_Load_Patching_Texture;
-
-	Texture about_texture;
-	if (!about_texture.loadFromFile("images/about_background.jpg"))
-		return Failed_To_Load_About_Texture;
-
+	err = load_attributes(&attributes);
+	if (err)
+		return err;
 
 	Sprite sprite;
-	sprite.setTexture(main_texture);
+	sprite.setTexture(attributes.main_texture);
 
 	RenderWindow window(sf::VideoMode(WIDTH_OF_WINDOW, HEIGHT_OF_WINDOW), "HackMe Patcher");
 	window.setMouseCursorVisible(false);
 
 	sf::Text title;
-	init_text(&title, &font, "HACKME PATCHER", 75, sf::Color(237, 147, 0));
+	init_text(&title, &attributes.main_font, "HACKME PATCHER", 75, sf::Color(237, 147, 0));
 	title.setPosition(WIDTH_OF_WINDOW / 2 - title.getGlobalBounds().width / 2, 10);
 
 	sf::Text menu_button[NUMBER_OF_MENU_BUTTONS];
-	init_menu_buttons(menu_button, &font);
+	init_menu_buttons(menu_button, &attributes.main_font);
 
 	sf::Text about_text;
-	init_text(&about_text, &font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
+	init_text(&about_text, &attributes.main_font, "This program was \ncreated to hack\nVladimir's \nhackme program", 40, sf::Color(237, 147, 0));
 	about_text.setPosition(30, 130);
 
 
@@ -80,12 +71,12 @@ int main()
 						switch(selected_button)
 						{
 							case START:
-								patch_program(&window, &patching_texture, &sprite, &title, &font);
+								patch_program(&window, &attributes.patching_texture, &sprite, &title, &attributes.main_font);
 								window.close();
 								break;
 
 							case ABOUT:
-								sprite.setTexture(about_texture);
+								sprite.setTexture(attributes.about_texture);
 								main_page_is_open  = false;
 								about_page_is_open = true;
 								break;
@@ -99,7 +90,7 @@ int main()
 
 				if ((!main_page_is_open) && (event.key.code == Keyboard::Escape))
 				{
-					sprite.setTexture(main_texture);
+					sprite.setTexture(attributes.main_texture);
 					main_page_is_open  = true;
 					about_page_is_open = false;
 					about_page_is_open = false;

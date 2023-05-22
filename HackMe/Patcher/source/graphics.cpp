@@ -4,6 +4,31 @@ sf::Color color_of_text = sf::Color(237, 147, 0);
 
 //-----------------------------------------------------------------------------------------------------------
 
+int load_attributes(Attributes_struct* attributes)
+{
+	sf::Font font;
+	if (!font.loadFromFile("fonts/font.otf"))
+		return Failed_To_Load_Font;
+	attributes->main_font = font;
+
+	sf::Texture main_texture;
+	if (!main_texture.loadFromFile("images/main_background.jpg"))
+		return Failed_To_Load_Main_Texture;
+	attributes->main_texture = main_texture;
+
+	sf::Texture patching_texture;
+	if (!patching_texture.loadFromFile("images/patching_background.jpg"))
+		return Failed_To_Load_Patching_Texture;
+	attributes->patching_texture = patching_texture;
+
+	sf::Texture about_texture;
+	if (!about_texture.loadFromFile("images/about_background.jpg"))
+		return Failed_To_Load_About_Texture;
+	attributes->about_texture = about_texture;
+
+	return Done_Successfully;
+}
+
 
 void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf::Color color)
 {
