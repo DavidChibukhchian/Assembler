@@ -1,5 +1,5 @@
-SFML_LIBS = -L C:\DOS\DOSBox\PROGRAMS\HackMe\Patcher\include\SFML\lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -lsfml-main -mwindows
-SFML_INCLUDE = -I C:\DOS\DOSBox\PROGRAMS\HackMe\Patcher\include\SFML\include
+SFML_LIBS = -L C:\Users\david\Desktop\Assembly-Language\HackMe\Patcher\include\SFML\lib -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -lsfml-main -mwindows
+SFML_INCLUDE = -I C:\Users\david\Desktop\Assembly-Language\HackMe\Patcher\include\SFML\include
 
 Patcher : build\main.o build\patcher.o build\graphics.o
 	g++ $(SFML_LIBS) build\main.o build\patcher.o build\graphics.o -o Patcher.exe -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -lsfml-main -mwindows
