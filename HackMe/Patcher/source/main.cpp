@@ -10,8 +10,7 @@ int main()
 	Attributes attributes = {};
 
 	err = load_attributes(&attributes);
-	if (err)
-		return err;
+	if (err) return err;
 
 	Sprite sprite;
 	sprite.setTexture(attributes.main_texture);
