@@ -32,8 +32,8 @@ int main()
 
 
 	int selected_button = 0;
-	int main_page_is_open  = 1;
-	int about_page_is_open = 0;
+	int main_page_is_open  = true;
+	int about_page_is_open = false;
 
 	while (window.isOpen())
 	{
@@ -43,64 +43,7 @@ int main()
 		{
 			if (event.type == sf::Event::KeyReleased)
 			{
-
 				function(&window, &attributes, &sprite, &title, event, menu_button, &selected_button, &main_page_is_open, &about_page_is_open);
-
-				/*
-				if (main_page_is_open)
-				{
-					//-----------------------------------------------------------------------//
-
-					if (event.key.code == Keyboard::Up)
-					{
-						if (selected_button > 0)
-						{
-							selected_button--;
-							change_color_of_menu_buttons(menu_button, selected_button);
-						}
-					}
-
-
-					if (event.key.code == Keyboard::Down)
-					{
-						if (selected_button < NUMBER_OF_MENU_BUTTONS - 1)
-						{
-							selected_button++;
-							change_color_of_menu_buttons(menu_button, selected_button);
-						}
-					}
-
-
-					if ((main_page_is_open) && (event.key.code == Keyboard::Return))
-					{
-						switch(selected_button)
-						{
-							case START:
-								patch_program(&window, &attributes.patching_texture, &sprite, &title, &attributes.main_font);
-								window.close();
-								break;
-
-							case ABOUT:
-								sprite.setTexture(attributes.about_texture);
-								main_page_is_open  = false;
-								about_page_is_open = true;
-								break;
-
-							case EXIT:
-								window.close();
-								break;
-						}
-					}
-
-					//-----------------------------------------------------------------------//
-				}
-
-				if ((!main_page_is_open) && (event.key.code == Keyboard::Escape))
-				{
-					sprite.setTexture(attributes.main_texture);
-					main_page_is_open  = true;
-					about_page_is_open = false;
-				} */
 			}
 		}
 

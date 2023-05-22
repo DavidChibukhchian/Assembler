@@ -1,23 +1,19 @@
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
-
 //-----------------------------------------------------------------------------------------------------------
-
 
 #define HEIGHT_OF_WINDOW        400
 #define WIDTH_OF_WINDOW         600
 #define NUMBER_OF_MENU_BUTTONS  3
-
+#define PAUSE_TIME              2
 
 //-----------------------------------------------------------------------------------------------------------
-
 
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
 #include <time.h>
 #include "patcher.h"
-
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -30,9 +26,7 @@ struct Attributes
 	sf::Texture about_texture;
 };
 
-int load_attributes(Attributes* attributes);
-
-void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event, sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open);
+//-----------------------------------------------------------------------------------------------------------
 
 enum graphics_Errors
 {
@@ -43,7 +37,6 @@ enum graphics_Errors
 	Failed_To_Load_About_Texture    = 5
 };
 
-
 enum Menu_Buttons
 {
 	START = 0,
@@ -51,18 +44,16 @@ enum Menu_Buttons
 	EXIT  = 2
 };
 
-
 //-----------------------------------------------------------------------------------------------------------
 
+int load_attributes(Attributes* attributes);
 
 void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf::Color color);
 
 void init_menu_buttons(sf::Text* menu_button, sf::Font* font);
 
-void change_color_of_menu_buttons(sf::Text* menu_button, size_t selected_button);
-
-void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sprite* sprite, sf::Text* title, sf::Font* font);
-
+void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
+              sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open);
 
 //-----------------------------------------------------------------------------------------------------------
 

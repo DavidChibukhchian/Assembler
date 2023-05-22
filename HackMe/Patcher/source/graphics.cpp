@@ -4,6 +4,19 @@ sf::Color color_of_text = sf::Color(237, 147, 0);
 
 //-----------------------------------------------------------------------------------------------------------
 
+static void pause(size_t pause_time)
+{
+	clock_t start = clock();
+	double difference = 0;
+
+	while (difference < pause_time)
+	{
+		difference = (double)(clock() - start) / CLOCKS_PER_SEC;
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
 int load_attributes(Attributes* attributes)
 {
 	sf::Font font;
@@ -29,8 +42,49 @@ int load_attributes(Attributes* attributes)
 	return Done_Successfully;
 }
 
+//-----------------------------------------------------------------------------------------------------------
 
-void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* attributes, sf::Text* title, int selected_button, int* main_page_is_open, int* about_page_is_open)
+static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sprite* sprite, sf::Text* title, sf::Font* font)
+{
+	sprite->setTexture(*texture);
+	window->clear();
+	window->draw(*sprite);
+	window->draw(*title);
+	window->display();
+
+	pause(PAUSE_TIME);
+
+	sf::Text patching_text;
+	init_text(&patching_text, font, "Patching...", 60, color_of_text);
+	patching_text.setPosition(WIDTH_OF_WINDOW / 2 - patching_text.getGlobalBounds().width / 2, 150);
+
+	window->clear();
+	window->draw(*sprite);
+	window->draw(*title);
+	window->draw(patching_text);
+	window->display();
+
+	int err = patch_hackme();
+	if (err) return;
+
+	pause(2*PAUSE_TIME);
+
+	sf::Text result_text;
+	init_text(&result_text, font, "Well Done", 60, color_of_text);
+	result_text.setPosition(WIDTH_OF_WINDOW / 2 - result_text.getGlobalBounds().width / 2, 150);
+
+	window->clear();
+	window->draw(*sprite);
+	window->draw(*title);
+	window->draw(result_text);
+	window->display();
+
+	pause(2*PAUSE_TIME);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+static void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* attributes, sf::Text* title, int selected_button, int* main_page_is_open, int* about_page_is_open)
 {
 	switch(selected_button)
 	{
@@ -41,8 +95,8 @@ void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* 
 
 		case ABOUT:
 			sprite->setTexture(attributes->about_texture);
-			*main_page_is_open  = 0;
-			*about_page_is_open = 1;
+			*main_page_is_open  = false;
+			*about_page_is_open = true;
 			break;
 
 		case EXIT:
@@ -51,9 +105,24 @@ void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* 
 	}
 }
 
+//-----------------------------------------------------------------------------------------------------------
 
+static void change_color_of_menu_buttons(sf::Text* menu_button, size_t selected_button)
+{
+	for (size_t i = 0; i < NUMBER_OF_MENU_BUTTONS; i++)
+	{
+		menu_button[i].setFillColor(color_of_text);
+		menu_button[i].setOutlineThickness(2);
+		menu_button[i].setOutlineColor(sf::Color::Black);
+	}
 
-void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event, sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open)
+	menu_button[selected_button].setFillColor(sf::Color::Green);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
+              sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open)
 {
 	if (*main_page_is_open)
 	{
@@ -84,13 +153,12 @@ void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* spri
 	if ((!(*main_page_is_open)) && (event.key.code == sf::Keyboard::Escape))
 	{
 		sprite->setTexture(attributes->main_texture);
-		*main_page_is_open  = 1;
-		*about_page_is_open = 0;
+		*main_page_is_open  = true;
+		*about_page_is_open = false;
 	}
 }
 
-
-
+//-----------------------------------------------------------------------------------------------------------
 
 void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf::Color color)
 {
@@ -104,24 +172,7 @@ void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf:
 	text->setOutlineColor(sf::Color::Black);
 }
 
-
 //-----------------------------------------------------------------------------------------------------------
-
-
-static void pause(size_t pause_time)
-{
-	clock_t start = clock();
-	double difference = 0;
-
-	while (difference < pause_time)
-	{
-		difference = (double)(clock() - start) / CLOCKS_PER_SEC;
-	}
-}
-
-
-//-----------------------------------------------------------------------------------------------------------
-
 
 void init_menu_buttons(sf::Text* menu_button, sf::Font* font)
 {
@@ -135,64 +186,5 @@ void init_menu_buttons(sf::Text* menu_button, sf::Font* font)
 
 	menu_button[0].setFillColor(sf::Color::Green);
 }
-
-
-//-----------------------------------------------------------------------------------------------------------
-
-
-void change_color_of_menu_buttons(sf::Text* menu_button, size_t selected_button)
-{
-	for (size_t i = 0; i < NUMBER_OF_MENU_BUTTONS; i++)
-	{
-		menu_button[i].setFillColor(color_of_text);
-		menu_button[i].setOutlineThickness(2);
-		menu_button[i].setOutlineColor(sf::Color::Black);
-	}
-
-	menu_button[selected_button].setFillColor(sf::Color::Green);
-}
-
-
-//-----------------------------------------------------------------------------------------------------------
-
-
-void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sprite* sprite, sf::Text* title, sf::Font* font)
-{
-	sprite->setTexture(*texture);
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
-	window->display();
-
-	pause(2);
-
-	sf::Text patching_text;
-	init_text(&patching_text, font, "Patching...", 60, color_of_text);
-	patching_text.setPosition(WIDTH_OF_WINDOW / 2 - patching_text.getGlobalBounds().width / 2, 150);
-
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
-	window->draw(patching_text);
-	window->display();
-
-	int err = patch_hackme();
-	if (err) return;
-
-	pause(4);
-
-	sf::Text result_text;
-	init_text(&result_text, font, "Well Done", 60, color_of_text);
-	result_text.setPosition(WIDTH_OF_WINDOW / 2 - result_text.getGlobalBounds().width / 2, 150);
-
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
-	window->draw(result_text);
-	window->display();
-
-	pause(3);
-}
-
 
 //-----------------------------------------------------------------------------------------------------------
