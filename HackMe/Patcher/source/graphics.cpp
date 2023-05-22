@@ -2,6 +2,11 @@
 
 sf::Color color_of_text = sf::Color(237, 147, 0);
 
+#define RESET_WINDOW               \
+	window->clear();               \
+	window->draw(*sprite);         \
+	window->draw(*title);      
+
 //-----------------------------------------------------------------------------------------------------------
 
 static void pause(size_t pause_time)
@@ -47,9 +52,7 @@ int load_attributes(Attributes* attributes)
 static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sprite* sprite, sf::Text* title, sf::Font* font)
 {
 	sprite->setTexture(*texture);
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
+	RESET_WINDOW;
 	window->display();
 
 	pause(PAUSE_TIME);
@@ -58,14 +61,12 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 	init_text(&patching_text, font, "Patching...", 60, color_of_text);
 	patching_text.setPosition(WIDTH_OF_WINDOW / 2 - patching_text.getGlobalBounds().width / 2, 150);
 
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
+	RESET_WINDOW;
 	window->draw(patching_text);
 	window->display();
 
 	int err = patch_hackme();
-	if (err) return;
+	//if (err) return;
 
 	pause(2*PAUSE_TIME);
 
@@ -73,13 +74,11 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 	init_text(&result_text, font, "Well Done", 60, color_of_text);
 	result_text.setPosition(WIDTH_OF_WINDOW / 2 - result_text.getGlobalBounds().width / 2, 150);
 
-	window->clear();
-	window->draw(*sprite);
-	window->draw(*title);
+	RESET_WINDOW;
 	window->draw(result_text);
 	window->display();
 
-	pause(2*PAUSE_TIME);
+	pause(PAUSE_TIME);
 }
 
 //-----------------------------------------------------------------------------------------------------------
