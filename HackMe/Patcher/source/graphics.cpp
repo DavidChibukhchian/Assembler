@@ -66,7 +66,8 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 	window->display();
 
 	int err = patch_hackme();
-	//if (err) return;
+	if (err)
+		return;
 
 	pause(2*PAUSE_TIME);
 
@@ -83,7 +84,8 @@ static void patch_program(sf::RenderWindow* window, sf::Texture* texture, sf::Sp
 
 //-----------------------------------------------------------------------------------------------------------
 
-static void another_function(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* attributes, sf::Text* title, int selected_button, int* main_page_is_open, int* about_page_is_open)
+static void handle_return(sf::RenderWindow* window, sf::Sprite* sprite, Attributes* attributes, sf::Text* title,
+                          int selected_button, int* main_page_is_open, int* about_page_is_open)
 {
 	switch(selected_button)
 	{
@@ -120,8 +122,8 @@ static void change_color_of_menu_buttons(sf::Text* menu_button, size_t selected_
 
 //-----------------------------------------------------------------------------------------------------------
 
-void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
-              sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open)
+void handle_key_release(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
+                        sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open)
 {
 	if (*main_page_is_open)
 	{
@@ -144,7 +146,7 @@ void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* spri
 				break;
 
 			case sf::Keyboard::Return:
-				another_function(window, sprite, attributes, title, *selected_button, main_page_is_open, about_page_is_open);
+				handle_return(window, sprite, attributes, title, *selected_button, main_page_is_open, about_page_is_open);
 				break;
 		}
 	}

@@ -43,7 +43,7 @@ int main()
 		{
 			if (event.type == sf::Event::KeyReleased)
 			{
-				function(&window, &attributes, &sprite, &title, event, menu_button, &selected_button, &main_page_is_open, &about_page_is_open);
+				handle_key_release(&window, &attributes, &sprite, &title, event, menu_button, &selected_button, &main_page_is_open, &about_page_is_open);
 			}
 		}
 

@@ -52,8 +52,8 @@ void init_text(sf::Text* text, sf::Font* font, const char* str, size_t size, sf:
 
 void init_menu_buttons(sf::Text* menu_button, sf::Font* font);
 
-void function(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
-              sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open);
+void handle_key_release(sf::RenderWindow* window, Attributes* attributes, sf::Sprite* sprite, sf::Text* title, sf::Event event,
+                        sf::Text* menu_button, int* selected_button, int* main_page_is_open, int* about_page_is_open);
 
 //-----------------------------------------------------------------------------------------------------------
 
