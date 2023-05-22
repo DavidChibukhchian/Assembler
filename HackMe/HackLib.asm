@@ -121,33 +121,20 @@ Print_String            proc
 
 
 ;-----------------------------------------------------------------------
-; Draws a picture in case of right password
+;
 ;-----------------------------------------------------------------------
-; Entry:                None
-; Expects:              ES -> video segment
-; Destroys:             AX, BX, CX, DX, SI, DI
-; Exit:                 None
+; Entry:
+; Expects:
+; Destroys:
+; Exit:
 ;-----------------------------------------------------------------------
-Draw_ACCESS_GRANTED     proc
-
-			mov bx, top_left_corner_of_frame
-			mov ah, color_of_frame
-			mov al, color_of_space_Granted
-			mov dh, height_of_frame
-			mov dl, width_of_frame
-			lea si, frame_symbols
-			call Draw_Frame                                 ; draws a frame with a different color of space
-
-			lea si, Access_Granted_phrase
-			mov bx, coordinates_of_result_phrase
+Draw_ACCESS_Granted     proc
+			
 			mov ah, color_of_result_phrase_Granted
-			call Print_String                               ; prints "ACCESS GRANTED" phrase in the frame
-
-			mov bx, coordinates_of_result_picture
-			mov ah, color_of_result_picture
-			mov al, symbol_of_result_picture
-			lea si, Granted_coords
-			call Draw_Picture                               ; draws "ХОРОШ" in the frame
+			mov al, color_of_space_Granted
+			lea si, Access_Granted_phrase
+			lea bp, Granted_coords
+			call Draw_Result_Picture
 
 			ret
 			endp
@@ -157,33 +144,60 @@ Draw_ACCESS_GRANTED     proc
 
 
 ;-----------------------------------------------------------------------
-; Draws a picture in case of wrong password
+;
 ;-----------------------------------------------------------------------
-; Entry:                None
-; Expects:              ES -> video segment
-; Destroys:             AX, BX, CX, DX, SI, DI
-; Exit:                 None
+; Entry:
+; Expects:
+; Destroys:
+; Exit:
 ;-----------------------------------------------------------------------
 Draw_ACCESS_DENIED      proc
+			
+			mov ah, color_of_result_phrase_Denied
+			mov al, color_of_space_Denied
+			lea si, Access_Denied_phrase
+			lea bp, Denied_coords
+			call Draw_Result_Picture
+
+			ret
+			endp
+;-----------------------------------------------------------------------
+
+
+
+
+;-----------------------------------------------------------------------
+; Draws a picture on the screen
+;-----------------------------------------------------------------------
+; Entry:                AH = color_of_result_phrase_Denied
+;                       AL = color_of_space_Denied
+;                       SI = Access_Denied_phrase
+;                       BP = Denied_coords
+; Expects:              ES -> video segment
+; Destroys:             B
+; Exit:                 N
+;-----------------------------------------------------------------------
+Draw_Result_Picture     proc
+
+			push bp ax si
 
 			mov bx, top_left_corner_of_frame
 			mov ah, color_of_frame
-			mov al, color_of_space_Denied
 			mov dh, height_of_frame
 			mov dl, width_of_frame
 			lea si, frame_symbols
-			call Draw_Frame                                 ; draws a frame with a different color of space
+			call Draw_Frame                                 ; changes the color of space of the frame
 
-			lea si, Access_Denied_phrase
+			pop si
+			pop ax
 			mov bx, coordinates_of_result_phrase
-			mov ah, color_of_result_phrase_Denied
-			call Print_String                               ; prints "ACCESS DENIED" phrase in the frame
+			call Print_String                               ; prints result phrase in the frame
 
+			pop si
 			mov bx, coordinates_of_result_picture
 			mov ah, color_of_result_picture
 			mov al, symbol_of_result_picture
-			lea si, Denied_coords
-			call Draw_Picture                               ; draws "LOSER" in the frame
+			call Draw_Picture                               ; draws result picture in the frame
 
 			ret
 			endp
