@@ -121,19 +121,19 @@ Print_String            proc
 
 
 ;-----------------------------------------------------------------------
-;
+; Draws "XOPOIII" in the frame in case of right password
 ;-----------------------------------------------------------------------
-; Entry:
-; Expects:
-; Destroys:
-; Exit:
+; Entry:                None
+; Expects:              ES -> video segment
+; Destroys:             AX, BX, CX, DX, SI, DI
+; Exit:                 None
 ;-----------------------------------------------------------------------
 Draw_ACCESS_Granted     proc
 			
 			mov ah, color_of_result_phrase_Granted
 			mov al, color_of_space_Granted
 			lea si, Access_Granted_phrase
-			lea bp, Granted_coords
+			lea di, Granted_coords
 			call Draw_Result_Picture
 
 			ret
@@ -144,19 +144,19 @@ Draw_ACCESS_Granted     proc
 
 
 ;-----------------------------------------------------------------------
-;
+; Draws "LOSER" in the frame in case of wrong password
 ;-----------------------------------------------------------------------
-; Entry:
-; Expects:
-; Destroys:
-; Exit:
+; Entry:                None
+; Expects:              ES -> video segment
+; Destroys:             AX, BX, CX, DX, SI, DI
+; Exit:                 None
 ;-----------------------------------------------------------------------
 Draw_ACCESS_DENIED      proc
 			
 			mov ah, color_of_result_phrase_Denied
 			mov al, color_of_space_Denied
 			lea si, Access_Denied_phrase
-			lea bp, Denied_coords
+			lea di, Denied_coords
 			call Draw_Result_Picture
 
 			ret
@@ -167,19 +167,19 @@ Draw_ACCESS_DENIED      proc
 
 
 ;-----------------------------------------------------------------------
-; Draws a picture on the screen
+; Draws a result picture on the screen
 ;-----------------------------------------------------------------------
-; Entry:                AH = color_of_result_phrase_Denied
-;                       AL = color_of_space_Denied
-;                       SI = Access_Denied_phrase
-;                       BP = Denied_coords
+; Entry:                AH = color of result phrase
+;                       AL = new color of space of the frame
+;                       SI = offset of result phrase
+;                       DI = offset of coordinates of result picture
 ; Expects:              ES -> video segment
-; Destroys:             B
-; Exit:                 N
+; Destroys:             AX, BX, CX, DX, SI, DI
+; Exit:                 None
 ;-----------------------------------------------------------------------
 Draw_Result_Picture     proc
 
-			push bp ax si
+			push di ax si
 
 			mov bx, top_left_corner_of_frame
 			mov ah, color_of_frame
